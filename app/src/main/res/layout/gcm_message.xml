@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="Overdraw,SpUsage,RtlHardcoded"
+    android:layout_width="match_parent"
+    android:padding="8dp"
+    android:background="@color/gray_3"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/iv_gcm_message_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_launcher"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/none"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="8dp" />
+
+    <TextView
+        android:id="@+id/tv_gcm_message_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textSize="16dp"
+        android:textColor="@color/white"
+        android:layout_toRightOf="@+id/iv_gcm_message_icon"
+        android:layout_marginBottom="4dp"
+        android:layout_toLeftOf="@+id/b_gcm_message_got_it"
+        android:layout_marginRight="8dp"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/tv_gcm_message_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14dp"
+        android:textColor="@color/white"
+        android:layout_toRightOf="@+id/iv_gcm_message_icon"
+        android:layout_below="@+id/tv_gcm_message_title"
+        android:layout_toLeftOf="@+id/b_gcm_message_got_it"
+        android:layout_marginRight="8dp"
+        android:includeFontPadding="false" />
+
+    <Button
+        android:id="@+id/b_gcm_message_got_it"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/default_button_size"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:text="@string/got_it"
+        android:textColor="@color/white"
+        android:textSize="@dimen/text_regular"
+        android:gravity="center"
+        android:paddingLeft="@dimen/padding_chat_message_side"
+        android:paddingRight="@dimen/padding_chat_message_side"
+        android:background="@drawable/button_got_it"
+        android:includeFontPadding="false" />
+</RelativeLayout>

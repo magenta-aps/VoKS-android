@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rl_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    tools:ignore="SpUsage,RtlHardcoded">
+
+    <android.opengl.GLSurfaceView
+        android:id="@+id/gl_a_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@null" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/gray_2">
+
+        <LinearLayout
+            android:id="@+id/ll_chat_top"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/default_button_size"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <RelativeLayout
+                android:id="@+id/rl_alarm_call"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/button_call_police">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:duplicateParentState="true"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/ic_call_police_size"
+                        android:layout_height="@dimen/ic_call_police_size"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginRight="@dimen/default_space"
+                        android:contentDescription="@string/none"
+                        android:duplicateParentState="true"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/ic_call_police" />
+
+                    <TextView
+                        android:id="@+id/tv_alarm_call"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:duplicateParentState="true"
+                        android:includeFontPadding="false"
+                        android:text="@string/call_police"
+                        android:textColor="@drawable/text_button_call_police"
+                        android:textSize="@dimen/text_big" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/ic_call_police_line_height"
+                    android:layout_alignParentBottom="true"
+                    android:contentDescription="@string/none"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_call_police_line" />
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/b_hide_chat"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_tap_here_light"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="@string/hide"
+                android:textColor="@drawable/text_button"
+                android:textSize="@dimen/text_big" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/v_chat_separator_top"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/chat_separator_height"
+            android:layout_below="@+id/ll_chat_top"
+            android:background="@color/chat_separator" />
+
+        <RelativeLayout
+            android:id="@+id/rl_chat"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/v_chat_separator_top"
+            android:background="@null">
+
+            <RelativeLayout
+                android:id="@+id/rl_chat_bottom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:background="@null">
+
+                <Button
+                    android:id="@+id/b_chat_call"
+                    android:layout_width="@dimen/default_button_size"
+                    android:layout_height="@dimen/default_button_size"
+                    android:layout_alignParentLeft="true"
+                    android:background="@drawable/button_call_ct"
+                    android:enabled="false" />
+
+                <EditText
+                    android:id="@+id/et_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/chat_input_height"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/chat_input_margin"
+                    android:layout_marginRight="@dimen/chat_input_margin"
+                    android:layout_toLeftOf="@+id/b_message"
+                    android:layout_toRightOf="@+id/b_chat_call"
+                    android:background="@color/white"
+                    android:hint="@string/chat_input_hint"
+                    android:includeFontPadding="false"
+                    android:paddingLeft="@dimen/default_space"
+                    android:paddingRight="@dimen/default_space"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray_1"
+                    android:textSize="@dimen/text_normal" />
+
+                <Button
+                    android:id="@+id/b_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/default_button_size"
+                    android:layout_alignParentRight="true"
+                    android:background="@drawable/bg_tap_here_light"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:minWidth="@dimen/default_button_size"
+                    android:paddingLeft="@dimen/default_space"
+                    android:paddingRight="@dimen/default_space"
+                    android:text="@string/send"
+                    android:textColor="@drawable/text_button"
+                    android:textSize="@dimen/text_regular" />
+            </RelativeLayout>
+
+            <View
+                android:id="@+id/v_chat_separator_bottom"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/chat_separator_height"
+                android:layout_above="@+id/rl_chat_bottom"
+                android:background="@color/chat_separator" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_chat"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/v_chat_separator_bottom"
+                android:background="@null"
+                android:scrollbars="vertical" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <include
+        android:id="@+id/ll_initial_overlay"
+        layout="@layout/activity_main_call_police"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:id="@+id/rl_a_main_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_tap_to_chat"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_a_main_hide_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center_horizontal"
+            android:text="@string/tap_to_chat"
+            android:textColor="@drawable/text_tap_here"
+            android:textSize="@dimen/text_big" />
+    </RelativeLayout>
+</RelativeLayout>

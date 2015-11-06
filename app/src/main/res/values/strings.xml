@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Alarm</string>
+    <!--suppress CheckTagEmptyBody -->
+    <string name="none"></string>
+
+    <!-- App strings. -->
+    <string name="check_internet_connection">Please, check if you are connected to Aruba Wi-Fi</string>
+    <string name="no_camera_and_microphone">Unable to find hardware camera and microphone. You will be able to chat with Crisis Center.</string>
+    <string name="no_camera">Unable to find hardware camera. You will be able to chat with Crisis Center.</string>
+    <string name="no_microphone">Unable to find hardware microphone. You will be able to chat with Crisis Center.</string>
+    <string name="camera_and_microphone_busy">Your camera and microphone are in use by another application. Please, close it and return to the app.</string>
+    <string name="camera_busy">Your camera is in use by another application. Please, close it and return to the app.</string>
+    <string name="microphone_busy">Your microphone is in use by another application. Please, close it and return to the app.</string>
+    <string name="camera_and_microphone_is_now_available">Camera and microphone are now available to use</string>
+    <!-- Alarm activity -->
+    <string name="loading">Loading,\nplease wait</string>
+    <string name="button_alarm">ALARM</string>
+    <string name="cancel_alarm">TAP HERE TO CANCEL</string>
+    <!-- Main activity -->
+    <string name="tap_here_to_chat">Can you tell us something about the situation?\nTap here to chat</string>
+    <string name="tap_to_hide">TAP HERE TO HIDE</string>
+    <string name="alarm_active">ALARM IS\nACTIVE</string>
+    <string name="explanation">Hide app or call the Police</string>
+    <string name="call_police">Call Police</string>
+    <string name="tap_to_chat">Tap to see chat</string>
+    <string name="got_it">GOT IT!</string>
+    <string name="chat_input_hint">Type message</string>
+    <string name="send">Send</string>
+    <string name="crisis_center">Crisis Center:</string>
+    <string name="hide">Hide</string>
+    <string name="connecting_to_shelter">Connecting to shelter</string>
+    <string name="connected_to_shelter">Connected to shelter</string>
+    <string name="audio_connection_lost">Audio connection lost</string>
+    <string name="connection_lost">Connection lost. Waiting&#8230;</string>
+    <string name="calling_crisis_center">Calling Crisis Center. Waiting for answer&#8230;</string>
+    <string name="call_crisis_center_ended">Call with Crisis Center ended</string>
+    <string name="crisis_center_answered">Crisis Center answered</string>
+    <string name="crisis_center_resumed">Crisis Center resumed call</string>
+    <string name="crisis_center_hold">Crisis Center hold call</string>
+</resources>

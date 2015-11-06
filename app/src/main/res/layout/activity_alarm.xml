@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="100"
+    tools:ignore="UselessParent,SpUsage,RtlHardcoded">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="58"
+        android:background="@color/gray_2">
+
+        <RelativeLayout
+            android:id="@+id/rl_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/gray_2">
+
+            <TextView
+                android:id="@+id/tv_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center_horizontal"
+                android:includeFontPadding="false"
+                android:text="@string/loading"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_big" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_start_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="false"
+            android:gravity="center_horizontal"
+            android:visibility="gone"
+            android:weightSum="100">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="76"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:weightSum="100">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="76"
+                    tools:ignore="NestedWeights">
+
+                    <com.bcomesafe.app.widgets.SquareButton
+                        android:id="@+id/sb_start_alarm"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/button_alarm"
+                        android:enabled="false"
+                        android:gravity="center"
+                        android:includeFontPadding="false"
+                        android:text="@string/button_alarm"
+                        android:textColor="@drawable/text_button_alarm"
+                        android:textSize="@dimen/text_huge" />
+                </RelativeLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_cancel_alarm"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="42"
+        android:background="@drawable/bg_tap_here">
+
+        <TextView
+            android:id="@+id/tv_cancel_alarm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:includeFontPadding="false"
+            android:text="@string/cancel_alarm"
+            android:textColor="@drawable/text_tap_here"
+            android:textSize="@dimen/text_big" />
+    </RelativeLayout>
+</LinearLayout>

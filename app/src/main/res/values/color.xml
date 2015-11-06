@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App colors -->
+    <color name="red_1">#cc2214</color>
+    <!--
+    <color name="red_2">#ed4f43</color>
+    <color name="red_3">#93160d</color>
+    <color name="green">#9db212</color>
+    -->
+    <color name="yellow">#f9f100</color>
+    <color name="black">#000000</color>
+    <color name="gray_1">#b1b1b1</color>
+    <color name="gray_2">#e5e5e5</color>
+    <color name="gray_3">#666666</color>
+    <color name="gray_4">#484848</color>
+    <color name="gray_5">#c7c7c7</color>
+    <color name="gray_6">#e1e1e1</color>
+    <color name="gray_7">#1e1e1e</color>
+    <color name="gray_8">#7c7c7c</color>
+    <color name="gray_9">#d1d1d1</color>
+    <color name="gray_10">#b1b1b1</color>
+    <color name="white">#ffffff</color>
+    <color name="chat_separator">#b7b7b7</color>
+
+</resources>
