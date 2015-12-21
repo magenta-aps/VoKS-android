@@ -23,7 +23,7 @@ android {
 		release {
 		    storeFile file("../voks.keystore")
 		    storePassword new String(System.console().readPassword("\n\$ Enter keystore password: "))
-		    keyAlias "voks"
+		    keyAlias new String(System.console().readLine("\n\$ Enter key alias: "))
 		    keyPassword new String(System.console().readPassword("\n\$ Enter key password: "))
 		}
 	}
