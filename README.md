@@ -6,11 +6,19 @@ This project constitutes the Android app as part of the BComeSafe alarm system. 
 
 
 Building the app
-________________
+----------------
 
 The project is set up for compilation with Gradle (https://gradle.org), which must be installed on the build machine. At least version 1.2.3 of the Gradle build system is required.
 
-console command for gradle compilation (gradle build)
+To compile the project, run the following command in the VoKS-android folder: ::
 
-Building and signing
+gradle build
+
+
+
+
+
+
+
+Signing...
 
