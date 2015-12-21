@@ -23,3 +23,4 @@ This should create apk files in the app/build/outputs/apk folder
 Signing the app
 ---------------
 
+To create a signed APK file, checkout the "build-with-keystore" branch (note the changes to app/build.gradle), replace the voks.keystore file with a keystore file or symlink, and run gradle build. You will be prompted for the keystore password, key alias and key password, and the compilation will place a signed apk in the app/build/outputs/apk folder.
