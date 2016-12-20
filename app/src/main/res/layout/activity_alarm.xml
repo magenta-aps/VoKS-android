@@ -13,24 +13,6 @@
         android:layout_weight="58"
         android:background="@color/gray_2">
 
-        <RelativeLayout
-            android:id="@+id/rl_message"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/gray_2">
-
-            <TextView
-                android:id="@+id/tv_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:gravity="center_horizontal"
-                android:includeFontPadding="false"
-                android:text="@string/loading"
-                android:textColor="@color/black"
-                android:textSize="@dimen/text_big" />
-        </RelativeLayout>
-
         <LinearLayout
             android:id="@+id/ll_start_alarm"
             android:layout_width="match_parent"
@@ -69,6 +51,27 @@
                 </RelativeLayout>
             </LinearLayout>
         </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/gray_2"
+            android:layout_below="@+id/ll_start_alarm"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true">
+
+            <TextView
+                android:id="@+id/tv_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center_horizontal"
+                android:includeFontPadding="false"
+                android:text="@string/loading"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_big" />
+        </RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout

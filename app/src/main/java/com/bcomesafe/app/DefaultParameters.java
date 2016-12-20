@@ -13,8 +13,9 @@ package com.bcomesafe.app;
 public final class DefaultParameters {
 
     // Settings
+    public static final int ENVIRONMENT_ID = Constants.ENVIRONMENT_RELEASE;
     // Should app use SSL or not
-    public static final boolean SHOULD_USE_SSL = false;
+    public static final boolean SHOULD_USE_SSL = true;
     // Enable/disable remote logs
     public static final boolean REMOTE_LOGS_ENABLED = false;
     // Threshold after which GCM message is treated as outdated
@@ -40,15 +41,29 @@ public final class DefaultParameters {
     // Shelter id
     private static final String DEFAULT_SHELTER_ID = "shelter";
     // SSL URLs
-    private static final String SSL_DEFAULT_URL = "";
+    // TODO This has to be changed when going live
+    private static final String SSL_DEFAULT_URL = "LIVE SSL SHELTER URL";
     private static final String SSL_DEFAULT_WS_URL = "wss://" + SSL_DEFAULT_URL + ":9000/";
     private static final String SSL_DEFAULT_API_URL = "https://" + SSL_DEFAULT_URL + "/api/voks";
     private static final String SSL_DEFAULT_CHECK_URL = "https://" + SSL_DEFAULT_URL + "/check_connection/check.txt";
     // Non SSL URLs
-    private static final String DEFAULT_URL = "";
+    // TODO This has to be changed when going live
+    private static final String DEFAULT_URL = "LIVE SHELTER URL";
     private static final String DEFAULT_WS_URL = "ws://" + DEFAULT_URL + ":9000/";
     private static final String DEFAULT_API_URL = "http://" + DEFAULT_URL + "/api/voks";
     private static final String DEFAULT_CHECK_URL = "http://" + DEFAULT_URL + "/check_connection/check.txt";
+
+    //SSL DEV URLs
+    private static final String SSL_DEV_URL = "DEV SSL SHELTER URL";
+    private static final String SSL_DEV_WS_URL = "wss://" + SSL_DEV_URL + ":9000/";
+    private static final String SSL_DEV_API_URL = "https://" + SSL_DEV_URL + "/api/voks";
+    private static final String SSL_DEV_CHECK_URL = "https://" + SSL_DEV_URL + "/check_connection/check.txt";
+
+    // Non SSL DEV URLs
+    private static final String DEV_URL = "DEV SHELTER URL";
+    private static final String DEV_WS_URL = "ws://" + DEV_URL + ":9000/";
+    private static final String DEV_API_URL = "http://" + DEV_URL + "/api/voks";
+    private static final String DEV_CHECK_URL = "http://" + DEV_URL + "/check_connection/check.txt";
 
     // Getters
     public static String getDefaultShelterId() {
@@ -56,26 +71,53 @@ public final class DefaultParameters {
     }
 
     public static String getDefaultWSURL() {
-        if (SHOULD_USE_SSL) {
-            return SSL_DEFAULT_WS_URL;
-        } else {
-            return DEFAULT_WS_URL;
-        }
+        if (ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV)
+        {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEV_WS_URL;
+            } else {
+                return DEV_WS_URL;
+            }
+        } else if (ENVIRONMENT_ID == Constants.ENVIRONMENT_RELEASE) {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEFAULT_WS_URL;
+            } else {
+                return DEFAULT_WS_URL;
+            }
+        } else return null;
     }
 
     public static String getDefaultAPIURL() {
-        if (SHOULD_USE_SSL) {
-            return SSL_DEFAULT_API_URL;
-        } else {
-            return DEFAULT_API_URL;
-        }
+        if (ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV)
+        {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEV_API_URL;
+            } else {
+                return DEV_API_URL;
+            }
+        } else if (ENVIRONMENT_ID == Constants.ENVIRONMENT_RELEASE) {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEFAULT_API_URL;
+            } else {
+                return DEFAULT_API_URL;
+            }
+        } else return null;
     }
 
     public static String getDefaultCheckURL() {
-        if (SHOULD_USE_SSL) {
-            return SSL_DEFAULT_CHECK_URL;
-        } else {
-            return DEFAULT_CHECK_URL;
-        }
+        if (ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV)
+        {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEV_CHECK_URL;
+            } else {
+                return DEV_CHECK_URL;
+            }
+        } else if (ENVIRONMENT_ID == Constants.ENVIRONMENT_RELEASE) {
+            if (SHOULD_USE_SSL) {
+                return SSL_DEFAULT_CHECK_URL;
+            } else {
+                return DEFAULT_CHECK_URL;
+            }
+        } else return null;
     }
 }

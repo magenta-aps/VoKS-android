@@ -31,11 +31,14 @@ import java.net.URL;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 import com.bcomesafe.app.AppContext;
 import com.bcomesafe.app.Constants;
 import com.bcomesafe.app.DefaultParameters;
+import com.bcomesafe.app.R;
 import com.bcomesafe.app.utils.RemoteLogUtils;
+import com.bcomesafe.app.utils.Utils;
 
 @SuppressLint("CommitPrefEdits")
 public class RequestManager {
@@ -85,6 +88,15 @@ public class RequestManager {
                         HttpURLConnection conn;
                         if (DefaultParameters.SHOULD_USE_SSL) {
                             conn = (HttpsURLConnection) url.openConnection();
+                            // Bypass SSL check for developing env
+                            // TODO This should be removed when going to production
+                            if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                                SSLSocketFactory sslSocketFactory = Utils.getBypassedSSLSocketFactory(AppContext.get());
+                                if (sslSocketFactory != null) {
+                                    ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
+                                }
+                            }
+                            // END of SSL bypass
                         } else {
                             conn = (HttpURLConnection) url.openConnection();
                         }

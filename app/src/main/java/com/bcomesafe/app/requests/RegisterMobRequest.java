@@ -24,7 +24,6 @@ public class RegisterMobRequest extends Request {
         log("device_id=" + device_id);
         log("gcm_id=" + gcm_id);
         log("mac_address=" + mac_address);
-        log("language=" + language);
         addParameter(Constants.REQUEST_PARAM_DEVICE_TYPE, Constants.REQUEST_PARAM_ANDROID);
         addParameter(Constants.REQUEST_PARAM_DEVICE_ID, device_id);
         addParameter(Constants.REQUEST_PARAM_GCM_ID, gcm_id);

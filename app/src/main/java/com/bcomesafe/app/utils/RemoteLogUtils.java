@@ -65,7 +65,7 @@ public class RemoteLogUtils {
     }
 
     public void put(String tag, String msg, long timestamp) {
-        if (DefaultParameters.REMOTE_LOGS_ENABLED) {
+        if (DefaultParameters.SHOULD_USE_SSL) {
             if (!mUsing && mLogs != null) {
                 mLogs.add(new RemoteLogObject(tag, msg, timestamp));
                 checkSize();

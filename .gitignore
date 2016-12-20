@@ -4,3 +4,9 @@
 /.idea/libraries
 .DS_Store
 /build
+
+.idea/.name
+.idea/copyright/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml

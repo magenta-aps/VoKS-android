@@ -66,7 +66,7 @@ import org.webrtc.SessionDescription;
 import org.webrtc.StatsReport;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
-import org.webrtc.VideoRendererGui.ScalingType;
+import org.webrtc.RendererCommon.ScalingType;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -78,6 +78,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.opengl.EGLContext;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -138,6 +139,9 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
     private Button bSendMessage;
     private Button bCallCC;
     private EditText etMessage;
+
+    // MAC textview
+    private TextView tvMac;
 
     // Fade animations
     private ObjectAnimator mFadeInOverlay, mFadeOutOverlay, mFadeOutChatText;
@@ -320,6 +324,10 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         setOnClickListeners();
         initializeAnimations();
         setUpChat();
+        if (DefaultParameters.ENVIRONMENT_ID==Constants.ENVIRONMENT_DEV) {
+            setMacTextView();
+        }
+
 
         // Register WIFI state change broadcast receiver
         IntentFilter intentFilter = new IntentFilter();
@@ -530,11 +538,27 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         rlCPOChat = (RelativeLayout) findViewById(R.id.rl_initial_overlay_chat);
         rlCPOHide = (RelativeLayout) findViewById(R.id.rl_initial_overlay_hide);
         rlCPOCallPolice = (RelativeLayout) findViewById(R.id.rl_initial_overlay_call_police);
+
+        //MAC address textview
+        tvMac = (TextView)findViewById(R.id.tv_mac);
     }
+
+    //Set Mac Address in TextView
+
+    private void setMacTextView()
+    {
+        if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+            tvMac.setText("MAC: " + AppUser.get().getDeviceMacAddress());
+            tvMac.setVisibility(View.GONE);
+        }
+    }
+
+
 
     /**
      * Sets fonts
      */
+
     private void setFonts() {
         tvHideChat.setTypeface(FontsUtils.getInstance().getTfBold());
         etMessage.setTypeface(FontsUtils.getInstance().getTfLight());
@@ -675,6 +699,8 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         }
     }
 
+
+
     /**
      * Initializes WebSocket connection
      */
@@ -720,7 +746,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                 if (mPCC == null) {
                     log("Creating pcc");
                     mPCC = new PeerConnectionClient();
-                    mPCC.createPeerConnectionFactory(MainActivity.this, VideoRendererGui.getEGLContext(), mPeerConnectionParameters, MainActivity.this);
+                    mPCC.createPeerConnectionFactory(MainActivity.this, VideoRendererGui.getEglBaseContext(), mPeerConnectionParameters, MainActivity.this);
                 }
                 if (mSignalingParameters != null) {
                     log("EGL context is ready after websocket connection. (signalingParameters!=null)");

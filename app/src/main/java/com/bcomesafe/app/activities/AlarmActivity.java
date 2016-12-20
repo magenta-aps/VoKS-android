@@ -11,7 +11,9 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -42,6 +44,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.Inet6Address;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import com.bcomesafe.app.AppContext;
@@ -445,15 +452,45 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         }
     }
 
+
     /**
      * Checks device MAC address
      */
     private void checkMACAddress() {
         log("checkMACAddress()");
         // Get device MAC address
-        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wInfo = wifiManager.getConnectionInfo();
-        String currentMacAddress = wInfo.getMacAddress();
+        String currentMacAddress = null;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+            try {
+                List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+                for (NetworkInterface nif : all) {
+                    if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                    byte[] macBytes = nif.getHardwareAddress();
+                    if (macBytes == null) {
+                        break;
+                    }
+
+                    StringBuilder macStringBuilder = new StringBuilder();
+                    for (byte b : macBytes) {
+                        macStringBuilder.append(String.format("%02X:",b));
+                    }
+
+                    if (macStringBuilder.length() > 0) {
+                        macStringBuilder.deleteCharAt(macStringBuilder.length() - 1);
+                    }
+                    currentMacAddress = macStringBuilder.toString();
+
+                }
+            }
+            catch (Exception ex){}
+
+        } else {
+            WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wInfo = wifiManager.getConnectionInfo();
+            currentMacAddress = wInfo.getMacAddress();
+        }
+
         if (currentMacAddress == null || currentMacAddress.equals(Constants.INVALID_STRING_ID)) {
             log("Couldn't get device MAC address");
         } else {

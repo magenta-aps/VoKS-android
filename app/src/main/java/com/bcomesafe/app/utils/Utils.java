@@ -19,15 +19,24 @@ import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Locale;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
+import com.bcomesafe.app.AppContext;
 import com.bcomesafe.app.AppUser;
 import com.bcomesafe.app.Constants;
 import com.bcomesafe.app.DefaultParameters;
@@ -96,6 +105,14 @@ public class Utils {
 
                 if (DefaultParameters.SHOULD_USE_SSL) {
                     conn = (HttpsURLConnection) url.openConnection();
+                    // Bypass SSL check for developing env
+                    if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                        SSLSocketFactory sslSocketFactory = getBypassedSSLSocketFactory(context);
+                        if(sslSocketFactory != null) {
+                            ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
+                        }
+                    }
+                    // END of SSL bypass
                 } else {
                     conn = (HttpURLConnection) url.openConnection();
                 }
@@ -215,6 +232,12 @@ public class Utils {
                 }
             }
         }
+        //audioManager.setStreamVolume(AudioManager.STREAM_DTMF, 0, 0);
+        //audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, 0, 0);
+        //AppUser.get().setUserRingerMode(audioManager.getRingerMode());
+        //if (AppUser.get().getUserRingerMode() != AudioManager.RINGER_MODE_SILENT) {
+        //    audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        //}
         log("muteSounds() end");
     }
 
@@ -308,12 +331,83 @@ public class Utils {
             available = false;
         }
         recorder.release();
+        // NOTE other version
+        // log("MICROPHONE AVAILABLE=" + available);
+        // int sampleRateInHz = 8000;//8000 44100, 22050 and 11025
+        // int channelConfig = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+        // int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        // int bufferSize = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+        // AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, bufferSize);
+        // if (audioRecord.getRecordingState() == 3) {
+        //     available = false;
+        // }
+        // log("MICROPHONE AVAILABLE=" + available);
         if (available) {
             log("microphone is not in use");
         } else {
             log("microphone is in use");
         }
         return available;
+    }
+
+    /**
+     * Bypasses SSL certificate validation for connection
+     *
+     * @param context Context
+     */
+    public static SSLSocketFactory getBypassedSSLSocketFactory(Context context) {
+        if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV && DefaultParameters.SHOULD_USE_SSL) {
+            if (context == null) {
+                context = AppContext.get().getApplicationContext();
+            }
+
+            try {
+                // Load CAs from an InputStream
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                // NOTE ba.crt - DEV, ba2.crt - UAT
+                InputStream caInput = context.getAssets().open("ba.crt");
+
+                //noinspection ConstantConditions
+                if (caInput != null) {
+                    Certificate ca;
+                    //noinspection TryFinallyCanBeTryWithResources
+                    try {
+                        ca = cf.generateCertificate(caInput);
+                        log("ca=" + ((X509Certificate) ca).getSubjectDN());
+                    } finally {
+                        caInput.close();
+                    }
+
+                    // Create a KeyStore containing our trusted CAs
+                    String keyStoreType = KeyStore.getDefaultType();
+                    KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                    keyStore.load(null, null);
+                    keyStore.setCertificateEntry("ca", ca);
+
+                    // Create a TrustManager that trusts the CAs in our KeyStore
+                    String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+                    tmf.init(keyStore);
+
+                    // Create an SSLContext that uses our TrustManager
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, tmf.getTrustManagers(), null);
+
+                    // Tell the URLConnection to use a SocketFactory from our SSLContext
+                    // connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                    return sslContext.getSocketFactory();
+                } else {
+                    log("Unable to verify SSL certificate for debugging env");
+                    return null;
+                }
+            } catch (Exception e) {
+                log("Unable to verify SSL certificate for debugging env");
+                return null;
+            }
+        } else {
+            log("SSL bypass is turned off");
+            return null;
+        }
     }
 
     /**

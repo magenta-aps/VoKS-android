@@ -91,6 +91,15 @@
             android:layout_below="@+id/ll_chat_top"
             android:background="@color/chat_separator" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/gray_1"
+            android:layout_alignParentRight="true"
+            android:id="@+id/tv_mac"
+            android:layout_below="@id/v_chat_separator_top" />
+
         <RelativeLayout
             android:id="@+id/rl_chat"
             android:layout_width="match_parent"

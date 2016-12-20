@@ -147,4 +147,8 @@ public final class Constants {
     public static final String GCM_MESSAGE_TITLE = "title";
     public static final String GCM_MESSAGE_CONTENT = "content";
     public static final String GCM_MESSAGE_TIMESTAMP = "timestamp";
+
+    //Environment ids
+    public static final int ENVIRONMENT_DEV = 0;
+    public static final int ENVIRONMENT_RELEASE = 1;
 }

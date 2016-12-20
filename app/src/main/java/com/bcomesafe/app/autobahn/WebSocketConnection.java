@@ -1,22 +1,22 @@
 /**
  * Copyright 2011-2012 Tavendo GmbH
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * <p/>
+ * <p>
  * Implements the algorithm "Flexible and Economical UTF-8 Decoder" by
  * Bjoern Hoehrmann (http://bjoern.hoehrmann.de/utf-8/decoder/dfa/).
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * BComeSafe, http://bcomesafe.com
  * Copyright 2015 Magenta ApS, http://magenta.dk
  * Licensed under MPL 2.0, https://www.mozilla.org/MPL/2.0/
@@ -45,7 +45,10 @@ import java.net.URI;
 
 import javax.net.SocketFactory;
 
+import com.bcomesafe.app.Constants;
+import com.bcomesafe.app.DefaultParameters;
 import com.bcomesafe.app.utils.RemoteLogUtils;
+import com.bcomesafe.app.utils.Utils;
 
 @SuppressWarnings({"unused", "SynchronizeOnNonFinalField"})
 public class WebSocketConnection implements WebSocket {
@@ -416,7 +419,11 @@ public class WebSocketConnection implements WebSocket {
 
                 SocketFactory factory;
                 if (this.mWebSocketURI.getScheme().equalsIgnoreCase("wss")) {
-                    factory = SSLCertificateSocketFactory.getDefault();
+                    if (DefaultParameters.SHOULD_USE_SSL && DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                        factory = Utils.getBypassedSSLSocketFactory(null);
+                    } else {
+                        factory = SSLCertificateSocketFactory.getDefault();
+                    }
                     if (factory == null) {
                         log2("factory == null");
                     } else {

@@ -75,11 +75,11 @@ public class AppRTCAudioManager {
     private boolean mInitialized = false;
     private final AudioManager mAudioManager;
     private int mSavedAudioMode = AudioManager.MODE_INVALID;
-    // NOTE change this value if needed to mute speaker from start
+    // TODO change this value if needed to mute speaker from start
     private boolean mSavedIsSpeakerPhoneOn = false;
     private boolean mSavedIsMicrophoneMute = false;
 
-    // NOTE change this value if needed to change default audio device
+    // TODO change this value if needed to change default audio device
     private final AudioDevice mDefaultAudioDevice = AudioDevice.EARPIECE;
 
     // Contains the currently selected audio device.
@@ -118,7 +118,7 @@ public class AppRTCAudioManager {
         // Store current audio state so we can restore it when close() is called.
         mSavedAudioMode = mAudioManager.getMode();
 
-        // NOTE added to mute speaker.
+        // TODO added to mute speaker.
         setSpeakerphoneOn(mSavedIsSpeakerPhoneOn);
 
         mSavedIsSpeakerPhoneOn = mAudioManager.isSpeakerphoneOn();
@@ -181,7 +181,7 @@ public class AppRTCAudioManager {
      */
     private void setAudioDevice(AudioDevice device) {
         log("setAudioDevice(device=" + device + ")");
-        // NOTE removed
+        // TODO removed
         // AppRTCUtils.assertIsTrue(mAudioDevices.contains(device));
         switch (device) {
             case SPEAKER_PHONE:

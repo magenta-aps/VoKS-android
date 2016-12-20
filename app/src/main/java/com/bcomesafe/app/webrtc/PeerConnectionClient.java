@@ -38,6 +38,7 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.bcomesafe.app.utils.DeviceNameHandler;
 import com.bcomesafe.app.utils.RemoteLogUtils;
 import com.bcomesafe.app.webrtc.AppRTCClient.SignalingParameters;
 import com.bcomesafe.app.webrtcutils.LooperExecutor;
@@ -70,11 +71,12 @@ import com.bcomesafe.app.webrtcutils.LooperExecutor;
  */
 
 import android.content.Context;
-import android.opengl.EGLContext;
+import android.hardware.Camera;
 import android.util.Log;
 
 import org.webrtc.AudioTrack;
 import org.webrtc.DataChannel;
+import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaCodecVideoEncoder;
 import org.webrtc.MediaConstraints;
@@ -91,7 +93,6 @@ import org.webrtc.VideoCapturerAndroid;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
-
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -292,7 +293,7 @@ public class PeerConnectionClient {
 
     public void createPeerConnectionFactory(
             final Context context,
-            final EGLContext renderEGLContext,
+            final EglBase.Context renderEGLContext,
             final PeerConnectionParameters peerConnectionParameters,
             final PeerConnectionEvents events) {
         this.mPeerConnectionParameters = peerConnectionParameters;
@@ -366,7 +367,7 @@ public class PeerConnectionClient {
         return videoCallEnabled;
     }
 
-    private void createPeerConnectionFactoryInternal(Context context, EGLContext renderEGLContext) {
+    private void createPeerConnectionFactoryInternal(Context context, EglBase.Context renderEGLContext) {
         log("Create peer connection factory with EGLContext " + renderEGLContext + ". Use video: " + mPeerConnectionParameters.videoCallEnabled);
         isError = false;
         // Check if VP9 is used by default.
@@ -379,7 +380,7 @@ public class PeerConnectionClient {
         preferH264 = videoCallEnabled && mPeerConnectionParameters.videoCodec != null && mPeerConnectionParameters.videoCodec.equals(VIDEO_CODEC_H264);
         // Check if ISAC is used by default.
         preferIsac = mPeerConnectionParameters.audioCodec != null && mPeerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
-        if (!PeerConnectionFactory.initializeAndroidGlobals(context, true, true, mPeerConnectionParameters.videoCodecHwAcceleration, renderEGLContext)) {
+        if (!PeerConnectionFactory.initializeAndroidGlobals(context, true, true, mPeerConnectionParameters.videoCodecHwAcceleration)) {
             mEvents.onPeerConnectionError("Failed to initializeAndroidGlobals");
         }
         mFactory = new PeerConnectionFactory();
@@ -401,7 +402,7 @@ public class PeerConnectionClient {
         }
 
         // Check if there is a camera on device and disable video call if not.
-        mNumberOfCameras = VideoCapturerAndroid.getDeviceCount();
+        mNumberOfCameras = Camera.getNumberOfCameras();
         if (mNumberOfCameras == 0) {
             log("No camera on device. Switch to audio only call.");
             videoCallEnabled = false;
@@ -485,10 +486,11 @@ public class PeerConnectionClient {
 
         mMediaStream = mFactory.createLocalMediaStream("ARDAMS");
         if (videoCallEnabled) {
-            String cameraDeviceName = VideoCapturerAndroid.getDeviceName(0);
+
+            String cameraDeviceName = DeviceNameHandler.getDeviceName(0);
             if (useFrontFacingCamera) {
                 log("trying to use front facing camera");
-                String frontCameraDeviceName = VideoCapturerAndroid.getNameOfFrontFacingDevice();
+                String frontCameraDeviceName = DeviceNameHandler.getNameOfFrontFacingDevice();
                 if (mNumberOfCameras > 1 && frontCameraDeviceName != null) {
                     cameraDeviceName = frontCameraDeviceName;
                 }
@@ -512,6 +514,7 @@ public class PeerConnectionClient {
 
         log("Peer connection created.");
     }
+
 
     private void closeInternal() {
         log("closeInternal()");
@@ -933,6 +936,11 @@ public class PeerConnectionClient {
         }
 
         @Override
+        public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
+
+        }
+
+        @Override
         public void onSignalingChange(
                 PeerConnection.SignalingState newState) {
             log("SignalingState: " + newState);
@@ -967,6 +975,11 @@ public class PeerConnectionClient {
                     }
                 }
             });
+        }
+
+        @Override
+        public void onIceConnectionReceivingChange(boolean b) {
+
         }
 
         @Override

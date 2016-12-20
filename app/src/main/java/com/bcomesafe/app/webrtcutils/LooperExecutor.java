@@ -102,6 +102,7 @@ public class LooperExecutor extends Thread implements Executor {
         handler.post(new Runnable() {
             @Override
             public void run() {
+                // TODO this should be tested on API <18
                 if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     //noinspection ConstantConditions
                     Looper.myLooper().quitSafely();
