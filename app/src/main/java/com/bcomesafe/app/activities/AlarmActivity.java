@@ -7,13 +7,12 @@
 
 package com.bcomesafe.app.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,28 +26,41 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.telephony.TelephonyManager;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.LinearLayout;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bcomesafe.app.BuildConfig;
+import com.bcomesafe.app.adapters.BCSListAdapter;
+import com.bcomesafe.app.objects.BCSObject;
+import com.bcomesafe.app.requests.GetBCSRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.Inet6Address;
 import java.net.NetworkInterface;
-import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 import com.bcomesafe.app.AppContext;
@@ -65,42 +77,58 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 import com.bcomesafe.app.utils.Utils;
 import com.bcomesafe.app.utils.WifiBroadcastReceiver;
 import com.bcomesafe.app.widgets.SquareButton;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
- * AlarmActivity - responsible for checking device UID, registration to shelter, GCM registration,
+ * AlarmActivity - responsible for checking device UID, registration to BCS, GCM registration,
  * alarm starting
  */
-public class AlarmActivity extends Activity implements OnClickListener, WifiBroadcastReceiver.WifiStateReceiverListener {
+public class AlarmActivity extends Activity implements OnClickListener, WifiBroadcastReceiver.WifiStateReceiverListener, BCSListAdapter.BCSListAdapterClient, TextWatcher {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = AlarmActivity.class.getSimpleName();
 
-    // Constants
-    private static final boolean SHELTER_REGISTRATION_REQUIRED_EVERYTIME = true;
-    private static final long WORKER_ASYNC_TASK_LAUNCH_INTERVAL = 3000L;
-
     // View members
-    private LinearLayout llAlarm;
+    private RelativeLayout rlAlarm;
     private SquareButton sbStartAlarm;
     private RelativeLayout rlCancelAlarm;
     private RelativeLayout rlMessage;
     private TextView tvMessage, tvCancelAlarm;
+    private ImageView ivSettings;
+    private RelativeLayout rlSettings;
+    // Logs
+    private ImageView ivLogs;
+    private RelativeLayout rlLogs;
+    private EditText etLogs;
+    private TextView tvLogs;
+    // Settings
+    private TextView tvSelectBCS, tvRegister, tvLoading;
+    private EditText etFilter, etName, etEmail;
+    private RelativeLayout rlRegister;
+    private RecyclerView rvBCS;
 
     // Request ids
+    private long mGetBCSRequestId = Constants.INVALID_LONG_ID;
     private long mRegisterMobRequestId = Constants.INVALID_LONG_ID;
 
     // Variables
     private GoogleCloudMessaging mGCM;
     private boolean mActivityStarted = false;
+    // BCS list
+    private String mPreviousSelectedBCSId = null;
+    private List<BCSObject> mBCSList = null;
+    private List<BCSObject> mBCSListToShow = null;
+    private BCSListAdapter mBCSListAdapter;
 
     // WiFi state broadcast receiver
     private WifiBroadcastReceiver mWifiStateBroadcastReceiver;
 
     // Registration checkers
     private boolean mGCMRegistrationNeeded = false;
-    private boolean mShelterRegistrationNeeded = false;
-    private boolean mShelterRegistrationOK = false;
+    private boolean mBCSRegistrationNeeded = false;
+    private boolean mBCSRegistrationOK = false;
     // WorkerAsyncTask
     private WorkerAsyncTask mWorkerAsyncTask = null;
     private Handler mWorkerAsyncTaskHandler;
@@ -108,6 +136,9 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     // Signal for finished actions, needed for tests
     private final CountDownLatch mSignal = new CountDownLatch(1);
     private String mSignalMessage;
+
+    // Auto alarm
+    private boolean mAutoAlarm = false;
 
     /**
      * Broadcast receiver for request completed actions
@@ -120,6 +151,8 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                 log("onReceive() request completed action");
                 if (intent.getLongExtra(Constants.REQUEST_ID_EXTRA, Constants.INVALID_LONG_ID) == mRegisterMobRequestId) {
                     handleRegisterMobRequestResult(mRegisterMobRequestId);
+                } else if (intent.getLongExtra(Constants.REQUEST_ID_EXTRA, Constants.INVALID_LONG_ID) == mGetBCSRequestId) {
+                    handleGetBCSRequestResult(mGetBCSRequestId);
                 }
             }
         }
@@ -138,9 +171,24 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         }
     };
 
+    private final BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() != null && intent.getAction().equals(RemoteLogUtils.ACTION_LOG)
+                    && intent.getExtras().containsKey(RemoteLogUtils.EXTRA_LOG) && etLogs != null) {
+                etLogs.setText(etLogs.getText() + "\n" + intent.getExtras().getString(RemoteLogUtils.EXTRA_LOG));
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Initialize views
+        setContentView(R.layout.activity_alarm);
+        initializeViews();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLocalBroadcastReceiver, new IntentFilter(RemoteLogUtils.ACTION_LOG));
 
         RemoteLogUtils.getInstance().initializeLogging();
 
@@ -155,15 +203,19 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             // Initial mute sounds
             Utils.muteSounds(this, false);
         }
+        if (gotExtras != null && gotExtras.containsKey(Constants.EXTRA_AUTO_ALARM)) {
+            mAutoAlarm = gotExtras.getBoolean(Constants.EXTRA_AUTO_ALARM, false);
+            if (mAutoAlarm) {
+                // Register broadcast receiver for completed requests
+                LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(Constants.REQUEST_COMPLETED_ACTION));
+            }
+        }
 
         // Clear GCM messages queue if needed
         AppUser.get().clearGCMMessagesQueue();
         log("QueuedGCMMessages size=" + AppUser.get().getGCMMessagesQueueSize());
 
-        setContentView(R.layout.activity_alarm);
-
-        // Initialize views, set fonts and OnClickListeners
-        initializeViews();
+        // Set fonts and OnClickListeners
         setFonts();
         setOnClickListeners();
 
@@ -194,9 +246,10 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     private void showLoading(String msg) {
         log("showLoading()");
         sbStartAlarm.setEnabled(false);
-        llAlarm.setVisibility(View.GONE);
+        rlAlarm.setVisibility(View.GONE);
         rlMessage.setVisibility(View.VISIBLE);
         tvMessage.setText(msg);
+        rlSettings.setVisibility(View.GONE);
     }
 
     /**
@@ -205,9 +258,10 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     private void showRetryViews(String msg) {
         log("showRetryViews()");
         sbStartAlarm.setEnabled(false);
-        llAlarm.setVisibility(View.GONE);
+        rlAlarm.setVisibility(View.GONE);
         tvMessage.setText(msg);
         rlMessage.setVisibility(View.VISIBLE);
+        rlSettings.setVisibility(View.GONE);
     }
 
     /**
@@ -216,9 +270,71 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     private void showAlarmViews() {
         log("showAlarmViews()");
         sbStartAlarm.setEnabled(true);
-        llAlarm.setVisibility(View.VISIBLE);
-        rlMessage.setVisibility(View.GONE);
+        rlAlarm.setVisibility(View.VISIBLE);
         tvMessage.setText(getString(R.string.none));
+        rlSettings.setVisibility(View.GONE);
+        if (mAutoAlarm) {
+            startMainActivity();
+        }
+    }
+
+    /**
+     * Shows registration form views
+     */
+    private void showRegistrationFormViews() {
+        log("showRegistrationFormViews()");
+        etName.setText(AppUser.get().getUserName());
+        etEmail.setText(AppUser.get().getUserEmail());
+        mPreviousSelectedBCSId = AppUser.get().getBCSId();
+
+        if (mBCSList == null || mBCSList.size() == 0) {
+            tvLoading.setVisibility(View.VISIBLE);
+            rvBCS.setAdapter(null);
+            getBCS();
+        } else {
+            rvBCS.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+            mBCSListToShow = new ArrayList<>();
+            mBCSListAdapter = new BCSListAdapter(mBCSListToShow, this);
+            rvBCS.setAdapter(mBCSListAdapter);
+            tvLoading.setVisibility(View.GONE);
+        }
+
+        etFilter.setText("");
+        rlSettings.setVisibility(View.VISIBLE);
+        rlSettings.requestFocus();
+    }
+
+    private void showLogsViews() {
+        log("showLogsViews()");
+        rlLogs.setVisibility(View.VISIBLE);
+        rlLogs.requestFocus();
+    }
+
+    private void sendLogs() {
+        log("sendLogs()");
+        try {
+            Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+            emailIntent.setType("plain/text");
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Logs");
+            emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, etLogs.getText().toString());
+            startActivity(Intent.createChooser(emailIntent, "Send logs"));
+        } catch (Exception ignored) {
+            Toast.makeText(this, "Unable to create send logs intent", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void invalidateBCSDebug() {
+        log("invalidateBCSDebug()");
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (AppUser.get().getBCSDebug()) {
+                    ivLogs.setVisibility(View.VISIBLE);
+                } else {
+                    ivLogs.setVisibility(View.GONE);
+                }
+            }
+        });
     }
 
     @Override
@@ -226,6 +342,9 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         log("onResume()");
         super.onResume();
         // Check existing requests results if needed
+        if (mGetBCSRequestId != Constants.INVALID_LONG_ID && AppContext.get().getRequestManager().isRequestEnded(mGetBCSRequestId)) {
+            handleGetBCSRequestResult(mGetBCSRequestId);
+        }
         if (mRegisterMobRequestId != Constants.INVALID_LONG_ID && AppContext.get().getRequestManager().isRequestEnded(mRegisterMobRequestId)) {
             handleRegisterMobRequestResult(mRegisterMobRequestId);
         }
@@ -236,11 +355,13 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     @Override
     protected void onPause() {
         super.onPause();
-        // Unregister broadcast receiver for completed requests
-        try {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
-        } catch (Exception e) {
-            // Nothing to do
+        if (!mAutoAlarm) {
+            // Unregister broadcast receiver for completed requests
+            try {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+            } catch (Exception e) {
+                // Nothing to do
+            }
         }
     }
 
@@ -252,6 +373,14 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         if (mWorkerAsyncTask != null) {
             mWorkerAsyncTask.cancel(true);
             mWorkerAsyncTask = null;
+        }
+        if (mAutoAlarm) {
+            // Unregister broadcast receiver for completed requests
+            try {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+            } catch (Exception e) {
+                // Nothing to do
+            }
         }
         // Check GCM queue and if needed display notifications
         checkGCMMessagesQueue();
@@ -267,18 +396,39 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         if (!mActivityStarted) {
             RemoteLogUtils.getInstance().finalizeAndCleanUp();
         }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLocalBroadcastReceiver);
     }
 
     /**
      * Initializes views
      */
     private void initializeViews() {
-        llAlarm = (LinearLayout) findViewById(R.id.ll_start_alarm);
+        rlAlarm = (RelativeLayout) findViewById(R.id.rl_start_alarm);
         sbStartAlarm = (SquareButton) findViewById(R.id.sb_start_alarm);
         rlCancelAlarm = (RelativeLayout) findViewById(R.id.rl_cancel_alarm);
         tvCancelAlarm = (TextView) findViewById(R.id.tv_cancel_alarm);
         rlMessage = (RelativeLayout) findViewById(R.id.rl_message);
         tvMessage = (TextView) findViewById(R.id.tv_message);
+        ivSettings = (ImageView) findViewById(R.id.iv_settings);
+        rlSettings = (RelativeLayout) findViewById(R.id.rl_settings);
+
+        tvSelectBCS = (TextView) findViewById(R.id.tv_settings_select_bcs);
+        tvRegister = (TextView) findViewById(R.id.tv_settings_register);
+        tvLoading = (TextView) findViewById(R.id.tv_settings_loading);
+        etFilter = (EditText) findViewById(R.id.et_settings_filter);
+        etFilter.addTextChangedListener(this);
+        etName = (EditText) findViewById(R.id.et_settings_name);
+        etEmail = (EditText) findViewById(R.id.et_settings_email);
+        rlRegister = (RelativeLayout) findViewById(R.id.rl_settings_register);
+        rvBCS = (RecyclerView) findViewById(R.id.rv_settings_bcs);
+
+        //noinspection ConstantConditions
+        ivSettings.setVisibility(DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED ? View.VISIBLE : View.GONE);
+
+        ivLogs = (ImageView) findViewById(R.id.iv_logs);
+        rlLogs = (RelativeLayout) findViewById(R.id.rl_logs);
+        etLogs = (EditText) findViewById(R.id.et_logs);
+        tvLogs = (TextView) findViewById(R.id.tv_logs_send);
     }
 
     /**
@@ -288,6 +438,16 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         sbStartAlarm.setTypeface(FontsUtils.getInstance().getTfBold());
         tvCancelAlarm.setTypeface(FontsUtils.getInstance().getTfBold());
         tvMessage.setTypeface(FontsUtils.getInstance().getTfBold());
+
+        tvSelectBCS.setTypeface(FontsUtils.getInstance().getTfBold());
+        tvRegister.setTypeface(FontsUtils.getInstance().getTfBold());
+        tvLoading.setTypeface(FontsUtils.getInstance().getTfBold());
+        etFilter.setTypeface(FontsUtils.getInstance().getTfLight());
+        etName.setTypeface(FontsUtils.getInstance().getTfLight());
+        etEmail.setTypeface(FontsUtils.getInstance().getTfLight());
+
+        etLogs.setTypeface(FontsUtils.getInstance().getTfLight());
+        tvLogs.setTypeface(FontsUtils.getInstance().getTfBold());
     }
 
     /**
@@ -296,6 +456,12 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     private void setOnClickListeners() {
         sbStartAlarm.setOnClickListener(this);
         rlCancelAlarm.setOnClickListener(this);
+        ivSettings.setOnClickListener(this);
+
+        rlRegister.setOnClickListener(this);
+
+        ivLogs.setOnClickListener(this);
+        tvLogs.setOnClickListener(this);
     }
 
     @Override
@@ -307,6 +473,143 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             case R.id.rl_cancel_alarm: // Cancel button
                 finish();
                 break;
+            case R.id.iv_settings: // Settings button
+                showRegistrationFormViews();
+                break;
+            case R.id.rl_settings_register: // Register button
+                onClickButtonRegister();
+                break;
+            case R.id.iv_logs: // Logs button
+                showLogsViews();
+                break;
+            case R.id.tv_logs_send: // Logs send button
+                sendLogs();
+                break;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED) {
+            if (rlSettings.getVisibility() == View.VISIBLE) {
+                String currentlySelectedBCSId = AppUser.get().getBCSId();
+                String currentlySelectedBCSName = AppUser.get().getBCSName();
+                if (currentlySelectedBCSId != null && currentlySelectedBCSId.length() > 0 &&
+                        currentlySelectedBCSName != null && currentlySelectedBCSName.length() > 0) {
+                    rlSettings.setVisibility(View.GONE);
+                    if (!mBCSRegistrationOK ||
+                            (mPreviousSelectedBCSId != null && mPreviousSelectedBCSId.length() > 0
+                                    && !mPreviousSelectedBCSId.equals(currentlySelectedBCSId))) {
+                        startWorkerAsyncTaskLauncher();
+                    }
+                    return;
+                }
+            }
+        }
+        if (rlLogs.getVisibility() == View.VISIBLE) {
+            rlLogs.setVisibility(View.GONE);
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onBCSSelected(int position) {
+        if (mBCSListToShow != null && position < mBCSListToShow.size()) {
+            log("onBCSSelected() id=" + mBCSListToShow.get(position).getBCSId());
+            AppUser.get().setBCSDebug(mBCSListToShow.get(position).getDebug());
+            invalidateBCSDebug();
+            AppUser.get().setBCSId(mBCSListToShow.get(position).getBCSId());
+            AppUser.get().setBCSName(mBCSListToShow.get(position).getBCSName());
+            String bcsUrl = mBCSListToShow.get(position).getBCSUrl();
+            if (bcsUrl != null && !bcsUrl.toLowerCase(Locale.getDefault()).contains(DefaultParameters.DEFAULT_API_URL_SUFFIX)) {
+                bcsUrl += DefaultParameters.DEFAULT_API_URL_SUFFIX;
+            }
+            AppUser.get().setAPIURL(bcsUrl);
+            AppUser.get().setPoliceNumber(mBCSListToShow.get(position).getPoliceNumber());
+            if (mBCSListAdapter != null) {
+                mBCSListAdapter.notifyDataSetChanged();
+            }
+        } else {
+            log("onBCSSelected() error");
+        }
+    }
+
+    private void onClickButtonRegister() {
+        if (rlSettings.getVisibility() == View.VISIBLE) {
+            String currentlySelectedBCSId = AppUser.get().getBCSId();
+            String currentlySelectedBCSName = AppUser.get().getBCSName();
+            if (currentlySelectedBCSId == null || currentlySelectedBCSId.length() == 0 &&
+                    currentlySelectedBCSName == null || currentlySelectedBCSName.length() == 0) {
+                Toast.makeText(this, getString(R.string.error_shelter_not_selected), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String enteredName = etName.getText().toString().trim();
+            if (enteredName.length() == 0) {
+                Toast.makeText(this, getString(R.string.error_name_empty), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String enteredEmail = etEmail.getText().toString().trim();
+            if (enteredEmail.length() == 0) {
+                Toast.makeText(this, getString(R.string.error_email_empty), Toast.LENGTH_SHORT).show();
+                return;
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(enteredEmail).matches()) {
+                Toast.makeText(this, getString(R.string.error_email_not_valid), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            View view = this.getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+
+            AppUser.get().setUserName(enteredName);
+            AppUser.get().setUserEmail(enteredEmail);
+
+            rlSettings.setVisibility(View.GONE);
+            mBCSRegistrationNeeded = true;
+            mBCSRegistrationOK = false;
+            startWorkerAsyncTaskLauncher();
+        }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+        if (editable != null) {
+            filterBCSToShow(editable.toString().trim());
+        }
+    }
+
+    private void filterBCSToShow(String filter) {
+        if (mBCSListToShow != null && mBCSList != null) {
+            if (filter == null || filter.length() == 0) {
+                mBCSListToShow.clear();
+                mBCSListToShow.addAll(mBCSList);
+                mBCSListAdapter.notifyDataSetChanged();
+            } else {
+                mBCSListToShow.clear();
+                for (BCSObject bcsObject : mBCSList) {
+                    if (bcsObject.getBCSName() != null
+                            && bcsObject.getBCSName().toLowerCase(Locale.getDefault())
+                            .contains(filter.toLowerCase(Locale.getDefault()))) {
+                        mBCSListToShow.add(bcsObject);
+                    }
+                }
+                mBCSListAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -319,14 +622,14 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             mGCM = GoogleCloudMessaging.getInstance(this);
             if (getRegistrationId(getApplicationContext()).equals(Constants.INVALID_STRING_ID)) {
                 mGCMRegistrationNeeded = true;
-                mShelterRegistrationNeeded = true;
+                mBCSRegistrationNeeded = true;
             } else {
                 log("GCM ID - OK");
-                if (AppUser.get().getIsRegisteredOnShelter() && !mShelterRegistrationNeeded) {
-                    log("Device registered to shelter");
+                if (AppUser.get().getIsRegisteredOnBCS() && !mBCSRegistrationNeeded) {
+                    log("Device registered to BCS");
                     // Everything is ok
                 } else {
-                    mShelterRegistrationNeeded = true;
+                    mBCSRegistrationNeeded = true;
                 }
             }
         } else {
@@ -348,7 +651,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
      * Starts worker async task
      */
     private void startWorkerAsyncTask() {
-        if (mWorkerAsyncTask == null && mRegisterMobRequestId == Constants.INVALID_LONG_ID) {
+        if (mWorkerAsyncTask == null && mGetBCSRequestId == Constants.INVALID_LONG_ID && mRegisterMobRequestId == Constants.INVALID_LONG_ID) {
             log("Starting worker async task");
             mWorkerAsyncTask = new WorkerAsyncTask();
             mWorkerAsyncTask.execute();
@@ -385,11 +688,28 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     }
 
     /**
-     * Registers to shelter
+     * Gets BCS
      */
-    private void registerToShelter() {
-        log("registerToShelter()");
-        mRegisterMobRequestId = AppContext.get().getRequestManager().makeRequest(new RegisterMobRequest(AppUser.get().getDeviceUID(), AppUser.get().getGCMId(), AppUser.get().getDeviceMacAddress(), Utils.getCurrentLanguageCode(this)));
+    private void getBCS() {
+        log("getBCS()");
+        mGetBCSRequestId = AppContext.get().getRequestManager().makeRequest(new GetBCSRequest());
+    }
+
+    /**
+     * Registers to BCS
+     */
+    private void registerToBCS() {
+        log("registerToBCS()");
+        mRegisterMobRequestId = AppContext.get().getRequestManager().makeRequest(
+                new RegisterMobRequest(AppUser.get().getDeviceUID(),
+                        AppUser.get().getGCMId(),
+                        AppUser.get().getDeviceMacAddress(),
+                        Utils.getCurrentLanguageCode(this),
+                        AppUser.get().getBCSId(),
+                        AppUser.get().getUserName(),
+                        AppUser.get().getUserEmail()
+                )
+        );
     }
 
     /**
@@ -406,6 +726,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     /**
      * Check the device to make sure it has the Google Play Services APK.
      */
+    @SuppressWarnings("deprecation")
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         return resultCode == ConnectionResult.SUCCESS;
@@ -423,7 +744,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             String deviceUID = generateDeviceUID();
             log("New deviceUID stored:" + deviceUID);
             AppUser.get().setDeviceUID(deviceUID);
-            mShelterRegistrationNeeded = true;
+            mBCSRegistrationNeeded = true;
         } else {
             log("DeviceUID exists:" + AppUser.get().getDeviceUID());
         }
@@ -434,6 +755,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
      *
      * @return string - device UID
      */
+    @SuppressLint("HardwareIds")
     private String generateDeviceUID() {
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String deviceUID = telephonyManager.getDeviceId();
@@ -456,6 +778,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     /**
      * Checks device MAC address
      */
+    @SuppressLint("HardwareIds")
     private void checkMACAddress() {
         log("checkMACAddress()");
         // Get device MAC address
@@ -473,7 +796,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
 
                     StringBuilder macStringBuilder = new StringBuilder();
                     for (byte b : macBytes) {
-                        macStringBuilder.append(String.format("%02X:",b));
+                        macStringBuilder.append(String.format("%02X:", b));
                     }
 
                     if (macStringBuilder.length() > 0) {
@@ -482,11 +805,11 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                     currentMacAddress = macStringBuilder.toString();
 
                 }
-            }
-            catch (Exception ex){}
+            } catch (Exception ignored) {
 
+            }
         } else {
-            WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             WifiInfo wInfo = wifiManager.getConnectionInfo();
             currentMacAddress = wInfo.getMacAddress();
         }
@@ -498,12 +821,152 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             if (!AppUser.get().getDeviceMacAddress().equals(currentMacAddress)) {
                 log("Storing new device MAC address:" + currentMacAddress);
                 AppUser.get().setDeviceMacAddress(currentMacAddress);
-                // Force shelter registration
-                mShelterRegistrationNeeded = true;
+                // Force BCS registration
+                mBCSRegistrationNeeded = true;
             } else {
                 log("Device MAC address already stored:" + AppUser.get().getDeviceMacAddress());
             }
         }
+    }
+
+    /**
+     * Handles get BCS request result
+     */
+    private void handleGetBCSRequestResult(long requestId) {
+        log("handleGetBCSRequestResult()");
+
+        // Check request HTTP status code
+        int httpStatusCode = AppContext.get().getRequestManager().getRequestStatusCode(requestId);
+
+        log("handleGetBCSRequestResult() status code:" + httpStatusCode);
+
+        switch (httpStatusCode) {
+            case Constants.HTTP_STATUS_INTERNAL_APP_ERROR:
+            case Constants.HTTP_STATUS_BAD_REQUEST:
+            case Constants.HTTP_STATUS_CODE_INTERNAL_SERVER_ERROR:
+            case Constants.HTTP_STATUS_CODE_NOT_AVAILABLE:
+            case Constants.HTTP_STATUS_CODE_NOT_FOUND:
+                log("handleGetBCSRequestResult() got request error");
+                showRetryViews(getString(R.string.error_no_shelters));
+                break;
+            case Constants.HTTP_STATUS_CODE_OK:
+            case Constants.HTTP_STATUS_CODE_REDIRECT_1:
+            case Constants.HTTP_STATUS_CODE_REDIRECT_2:
+                // Continue
+                break;
+        }
+
+        // If HTTP status is OK
+        if (httpStatusCode == Constants.HTTP_STATUS_CODE_OK) {
+            // Parse result
+            String response = AppContext.get().getRequestManager().getRequestResult(requestId);
+            AppContext.get().getRequestManager().clearRequestData(requestId);
+            log("handleGetBCSRequestResult() got response:" + response);
+
+            JSONArray responseJsonArray = null;
+            try {
+                responseJsonArray = new JSONArray(response);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            if (responseJsonArray != null && responseJsonArray.length() > 0) {
+                // Parse BCS
+                try {
+                    mBCSList = new Gson().fromJson(responseJsonArray.toString(), new TypeToken<List<BCSObject>>() {
+                    }.getType());
+                } catch (Exception ignored) {
+
+                }
+
+                if (mBCSList != null && mBCSList.size() > 0) {
+                    log("handleGetBCSRequestResult() BCS size=" + mBCSList.size());
+                    if (DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED) {
+                        if (mBCSList.size() == 1) {
+                            AppUser.get().setBCSId(mBCSList.get(0).getBCSId());
+                            AppUser.get().setBCSDebug(mBCSList.get(0).getDebug());
+                            invalidateBCSDebug();
+                            AppUser.get().setBCSName(mBCSList.get(0).getBCSName());
+                            String bcsUrl = mBCSList.get(0).getBCSUrl();
+                            if (bcsUrl != null && !bcsUrl.toLowerCase(Locale.getDefault()).contains(DefaultParameters.DEFAULT_API_URL_SUFFIX)) {
+                                bcsUrl += DefaultParameters.DEFAULT_API_URL_SUFFIX;
+                            }
+                            AppUser.get().setAPIURL(bcsUrl);
+                            AppUser.get().setPoliceNumber(mBCSList.get(0).getPoliceNumber());
+
+                            if (mBCSRegistrationNeeded || DefaultParameters.BCS_REGISTRATION_REQUIRED_EVERY_TIME) {
+                                // Register to BCS
+                                registerToBCS();
+                            } else {
+                                mBCSRegistrationOK = true;
+
+                                showAlarmViews();
+                                stopWorkerAsyncTaskLauncher();
+                            }
+                        } else {
+                            String currentlySelectedBCSId = AppUser.get().getBCSId();
+                            String currentlySelectedBCSName = AppUser.get().getBCSName();
+                            if (currentlySelectedBCSId != null && currentlySelectedBCSId.length() > 0 &&
+                                    currentlySelectedBCSName != null && currentlySelectedBCSName.length() > 0) {
+                                boolean selectedBCSExists = false;
+                                for (BCSObject bcsObject : mBCSList) {
+                                    if (bcsObject.getBCSId() != null && bcsObject.getBCSId().equals(currentlySelectedBCSId)) {
+                                        selectedBCSExists = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!selectedBCSExists) {
+                                    AppUser.get().setBCSId(null);
+                                    AppUser.get().setBCSDebug(false);
+                                    invalidateBCSDebug();
+                                    AppUser.get().setBCSName(null);
+                                    AppUser.get().setPoliceNumber(null);
+                                    AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                                }
+                            } else {
+                                AppUser.get().setBCSId(null);
+                                AppUser.get().setBCSDebug(false);
+                                invalidateBCSDebug();
+                                AppUser.get().setBCSName(null);
+                                AppUser.get().setPoliceNumber(null);
+                                AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                            }
+                            showRegistrationFormViews();
+                            stopWorkerAsyncTaskLauncher();
+                        }
+                    } else {
+                        // BCS will be checked in worker async task
+                        AppUser.get().setBCSId(null);
+                        AppUser.get().setBCSDebug(false);
+                        invalidateBCSDebug();
+                        AppUser.get().setBCSName(null);
+                        AppUser.get().setPoliceNumber(null);
+                        AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                    }
+                } else {
+                    log("handleGetBCSsRequestResult() bad response json array");
+                    AppUser.get().setBCSId(null);
+                    AppUser.get().setBCSDebug(false);
+                    invalidateBCSDebug();
+                    AppUser.get().setBCSName(null);
+                    AppUser.get().setPoliceNumber(null);
+                    AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                    showRetryViews(getString(R.string.error_no_shelters));
+                }
+            } else {
+                log("handleGetBCSsRequestResult() bad response json array");
+                AppUser.get().setBCSId(null);
+                AppUser.get().setBCSDebug(false);
+                invalidateBCSDebug();
+                AppUser.get().setBCSName(null);
+                AppUser.get().setPoliceNumber(null);
+                AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                showRetryViews(getString(R.string.error_no_shelters));
+            }
+        }
+
+        mGetBCSRequestId = Constants.INVALID_LONG_ID;
     }
 
     /**
@@ -560,16 +1023,25 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                         mSignalMessage = "Register mob request parse error, unable to parse param " + Constants.REQUEST_RESPONSE_PARAM_SUCCESS;
                     }
 
-                    String shelterId = Constants.INVALID_STRING_ID;
+                    String BCSId = Constants.INVALID_STRING_ID;
+                    Boolean BCSDebug = null;
                     String wsURL = Constants.INVALID_STRING_ID;
                     String apiURL = Constants.INVALID_STRING_ID;
+                    boolean renew = false;
+                    boolean useGps = false;
 
                     if (success) {
                         // shelter_id
                         try {
-                            shelterId = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID).trim();
+                            BCSId = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID).trim();
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID);
+                        }
+                        // debug
+                        try {
+                            BCSDebug = responseJson.getBoolean(Constants.REQUEST_PARAM_DEBUG);
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_PARAM_DEBUG);
                         }
                         // ws_url
                         try {
@@ -590,19 +1062,49 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_DEV_MODE);
                         }
-                        if (!shelterId.equals(Constants.INVALID_STRING_ID) && !wsURL.equals(Constants.INVALID_STRING_ID) && !apiURL.equals(Constants.INVALID_STRING_ID)) {
-                            AppUser.get().setShelterID(shelterId);
-                            AppUser.get().setWsURL(wsURL);
-                            AppUser.get().setAPIURL(apiURL);
-                            // Ok
-                            AppUser.get().setIsRegisteredOnShelter(true);
-                            mShelterRegistrationOK = true;
-                            showAlarmViews();
-                            stopWorkerAsyncTaskLauncher();
+                        // renew
+                        try {
+                            renew = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_RENEW);
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_RENEW);
+                        }
+                        // use_gps
+                        try {
+                            useGps = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_USE_GPS);
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_USE_GPS);
+                        }
+                        if (renew) {
+                            AppUser.get().setBCSId(null);
+                            AppUser.get().setBCSDebug(false);
+                            invalidateBCSDebug();
+                            AppUser.get().setBCSName(null);
+                            AppUser.get().setPoliceNumber(null);
+                            AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
+                            AppUser.get().setBCSUseGPS(false);
+                            mBCSRegistrationNeeded = true;
+                            mBCSList.clear();
+                            mBCSListToShow.clear();
+                            mBCSListAdapter.notifyDataSetChanged();
+                            showRetryViews(getString(R.string.loading));
                         } else {
-                            showRetryViews(getString(R.string.check_internet_connection));
-                            // It's done
-                            mSignalMessage = "Register mob request parse error: no shelterId, wsURL or apiURL";
+                            if (!BCSId.equals(Constants.INVALID_STRING_ID) && !wsURL.equals(Constants.INVALID_STRING_ID) && !apiURL.equals(Constants.INVALID_STRING_ID)) {
+                                AppUser.get().setBCSId(BCSId);
+                                AppUser.get().setBCSDebug(BCSDebug);
+                                invalidateBCSDebug();
+                                AppUser.get().setWsURL(wsURL);
+                                AppUser.get().setAPIURL(apiURL);
+                                AppUser.get().setBCSUseGPS(useGps);
+                                // Ok
+                                AppUser.get().setIsRegisteredOnBCS(true);
+                                mBCSRegistrationOK = true;
+                                showAlarmViews();
+                                stopWorkerAsyncTaskLauncher();
+                            } else {
+                                showRetryViews(getString(R.string.check_internet_connection));
+                                // It's done
+                                mSignalMessage = "Register mob request parse error: no shelter_id (BCSId), wsURL or apiURL";
+                            }
                         }
                     } else {
                         // message
@@ -641,13 +1143,14 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     }
 
     /**
-     * WorkerAsyncTask responsible for GCM registration and registration to shelter
+     * WorkerAsyncTask responsible for GCM registration, getting BCS and registration to BCS
+     * if only one BCS got
      */
     private class WorkerAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
         private String GCMMsg = Constants.INVALID_STRING_ID;
         private String GCMId = Constants.INVALID_STRING_ID;
-        private boolean mShelterIsReachable = false;
+        private boolean mBCSIsReachable = false;
 
         @Override
         protected void onPreExecute() {
@@ -659,16 +1162,19 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         @Override
         protected Boolean doInBackground(Void... params) {
             log("WorkerAsyncTask doInBackground()");
-            mShelterIsReachable = Utils.isURLReachable(getApplicationContext(), DefaultParameters.getDefaultCheckURL(), 3);
-            log("mShelterIsReachable=" + mShelterIsReachable);
+            //noinspection ConstantConditions
+            mBCSIsReachable = DefaultParameters.WIFI_REQUIREMENT_DISABLED || Utils.isURLReachable(getApplicationContext(), DefaultParameters.getDefaultCheckURL(), 3);
+            //noinspection ConstantConditions
+            log("mBCSIsReachable=" + mBCSIsReachable);
 
-            if (mShelterIsReachable) {
+            if (mBCSIsReachable) {
                 if (mGCMRegistrationNeeded) {
                     try {
                         if (mGCM == null) {
                             mGCM = GoogleCloudMessaging.getInstance(getApplicationContext());
                         }
 
+                        //noinspection deprecation
                         GCMId = mGCM.register(DefaultParameters.GCM_SENDER_ID);
 
                         GCMMsg = "Device registered, GCM registration ID=" + GCMId;
@@ -678,26 +1184,99 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                             storeRegistrationId(GCMId);
                         }
                     } catch (IOException ex) {
+                        if (BuildConfig.DEBUG_MODE) {
+                            ex.printStackTrace();
+                        }
                         GCMMsg = "Error :" + ex.getMessage();
                     }
                     log("GCMMsg=" + GCMMsg);
                 } else {
                     log("GCM registration is not needed");
                 }
-                //noinspection ConstantConditions,PointlessBooleanExpression
-                if (mShelterRegistrationNeeded || SHELTER_REGISTRATION_REQUIRED_EVERYTIME) {
-                    // Register to shelter
-                    if (!isCancelled()) {
-                        registerToShelter();
+
+                String currentlySelectedBCSId = AppUser.get().getBCSId();
+                String currentlySelectedBCSName = AppUser.get().getBCSName();
+                String currentlySelectedBCSUrl = AppUser.get().getAPIURL();
+                if (TextUtils.isEmpty(currentlySelectedBCSId) || TextUtils.isEmpty(currentlySelectedBCSName)
+                        || TextUtils.isEmpty(currentlySelectedBCSUrl)) {
+                    log("do not have BCS selected");
+                    if (mBCSList == null || mBCSList.size() == 0) {
+                        log("do not have BCS list, call to get BCSs");
+                        getBCS();
                         return true;
                     }
                 } else {
-                    if (!isCancelled()) {
-                        mShelterRegistrationOK = true;
-                        return true;
+                    log("already have BCS selected, do not call to get BCS");
+                }
+
+                if (DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED) {
+                    //noinspection ConstantConditions,PointlessBooleanExpression
+                    if (mBCSRegistrationNeeded || DefaultParameters.BCS_REGISTRATION_REQUIRED_EVERY_TIME) {
+                        // Register to BCS
+                        if (!isCancelled()) {
+                            registerToBCS();
+                            return true;
+                        }
+                    } else {
+                        if (!isCancelled()) {
+                            mBCSRegistrationOK = true;
+                            return true;
+                        }
+                    }
+                } else {
+                    // Check BCS
+                    boolean foundReachableBCS = false;
+                    if (mBCSList != null && mBCSList.size() > 0) {
+                        for (BCSObject bcsObject : mBCSList) {
+                            if (!TextUtils.isEmpty(bcsObject.getBCSId())
+                                    && !TextUtils.isEmpty(bcsObject.getBCSName())
+                                    && !TextUtils.isEmpty(bcsObject.getBCSUrl())) {
+                                String BCSUrl = Utils.createCheckUrl(bcsObject.getBCSUrl());
+                                log("checking BCS url=" + BCSUrl);
+                                if (Utils.isURLReachable(getApplicationContext(),
+                                        BCSUrl,
+                                        3)) {
+                                    log("BCS id=" + bcsObject.getBCSId() + " is reachable");
+                                    AppUser.get().setBCSName(bcsObject.getBCSName());
+                                    AppUser.get().setBCSId(bcsObject.getBCSId());
+                                    AppUser.get().setBCSDebug(bcsObject.getDebug());
+                                    String bcsUrl = bcsObject.getBCSUrl();
+                                    if (bcsUrl != null && !bcsUrl.toLowerCase(Locale.getDefault()).contains(DefaultParameters.DEFAULT_API_URL_SUFFIX)) {
+                                        bcsUrl += DefaultParameters.DEFAULT_API_URL_SUFFIX;
+                                    }
+                                    AppUser.get().setAPIURL(bcsUrl);
+                                    AppUser.get().setPoliceNumber(bcsObject.getPoliceNumber());
+                                    foundReachableBCS = true;
+                                    invalidateBCSDebug();
+                                    break;
+                                } else {
+                                    log("BCS id=" + bcsObject.getBCSId() + " is not reachable");
+                                }
+                            }
+                        }
+                    } else {
+                        // Check current BCS
+                        foundReachableBCS = Utils.isURLReachable(getApplicationContext(), Utils.createCheckUrl(AppUser.get().getAPIURL()), 3);
+                        invalidateBCSDebug();
+                        log("Saved BCS is reachable - use it");
+                    }
+
+                    if (foundReachableBCS) {
+                        log("Found reachable BCS");
+                        // Register to BCS
+                        if (!isCancelled()) {
+                            registerToBCS();
+                            return true;
+                        }
+                    } else {
+                        log("Didnt find reachable BCS");
+                        // Get BCSs
+                        getBCS();
+                        return false;
                     }
                 }
             }
+
             return false;
         }
 
@@ -706,22 +1285,27 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             log("WorkerAsyncTask onPostExecute() result=" + result);
             if (!isCancelled()) {
                 if (result) {
-                    if (mShelterRegistrationOK) {
-                        log("Shelter registration is OK, showing alarm views");
-                        showAlarmViews();
-                        stopWorkerAsyncTaskLauncher();
-
-                        // It's done
-                        mSignal.countDown();
+                    if (mBCSList == null || mBCSList.size() == 0) {
+                        log("BCS registration is not OK, waiting for get BCS to finish");
+                        // Wait for get BCS to finish
                     } else {
-                        log("Shelter registration is NOT OK, waiting for shelter registration to finish");
-                        // Wait for shelter registration to finish
+                        if (mBCSRegistrationOK) {
+                            log("BCS registration is OK, showing alarm views");
+                            showAlarmViews();
+                            stopWorkerAsyncTaskLauncher();
+
+                            // It's done
+                            mSignal.countDown();
+                        } else {
+                            log("BCS registration is NOT OK, waiting for BCS registration to finish");
+                            // Wait for BCS registration to finish
+                        }
                     }
                 } else {
                     showRetryViews(getString(R.string.check_internet_connection));
 
                     // It's done
-                    mSignalMessage = "Shelter is not reachable";
+                    mSignalMessage = "BCS is not reachable";
                     mSignal.countDown();
                 }
             } else {
@@ -902,7 +1486,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         public void run() {
             log("mWorkerAsyncTaskLauncher run()");
             startWorkerAsyncTask();
-            mWorkerAsyncTaskHandler.postDelayed(mWorkerAsyncTaskLauncher, WORKER_ASYNC_TASK_LAUNCH_INTERVAL);
+            mWorkerAsyncTaskHandler.postDelayed(mWorkerAsyncTaskLauncher, DefaultParameters.WORKER_ASYNC_TASK_LAUNCH_INTERVAL);
         }
     };
 

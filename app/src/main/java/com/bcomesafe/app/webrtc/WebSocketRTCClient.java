@@ -64,7 +64,7 @@ import org.webrtc.SessionDescription;
 public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WebSocketRTCClient.class.getSimpleName();
 
     // WebSocket connection states
@@ -142,7 +142,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
      * @return SignalingParameters
      */
     private SignalingParameters prepareSignalingParameters() {
-        String shelterId = AppUser.get().getShelterID().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getShelterID();
+        String shelterId = AppUser.get().getBCSId().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getBCSId();
         String clientId = AppUser.get().getDeviceUID();
         String wssUrl = AppUser.get().getWsURL().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultWSURL() + clientId : AppUser.get().getWsURL();
 
@@ -252,7 +252,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
                 jsonPut(payloadObj, Constants.WEBSOCKET_PARAM_SDP, sdp.description);
                 jsonPut(payloadObj, Constants.WEBSOCKET_PARAM_TYPE, Constants.WEBSOCKET_DATA_OFFER_LO);
                 jsonPut(json, Constants.WEBSOCKET_PARAM_PAYLOAD, payloadObj);
-                jsonPut(json, Constants.WEBSOCKET_PARAM_DST, AppUser.get().getShelterID().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getShelterID());
+                jsonPut(json, Constants.WEBSOCKET_PARAM_DST, AppUser.get().getBCSId().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getBCSId());
                 jsonPut(json, Constants.WEBSOCKET_PARAM_SRC, signalingParameters.clientId);
 
                 log("Sending offer sdp:" + json.toString());
@@ -296,7 +296,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
             public void run() {
                 JSONObject json = new JSONObject();
                 jsonPut(json, Constants.WEBSOCKET_PARAM_TYPE, Constants.WEBSOCKET_DATA_CANDIDATE_UP);
-                jsonPut(json, Constants.WEBSOCKET_PARAM_DST, AppUser.get().getShelterID().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getShelterID());
+                jsonPut(json, Constants.WEBSOCKET_PARAM_DST, AppUser.get().getBCSId().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getBCSId());
                 jsonPut(json, Constants.WEBSOCKET_PARAM_SRC, signalingParameters.clientId);
                 JSONObject payloadObject = new JSONObject();
                 jsonPut(payloadObject, Constants.WEBSOCKET_PARAM_SDP_MID, candidate.sdpMid);
@@ -358,7 +358,7 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelEvents 
                 try {
                     jsonData.put(Constants.WEBSOCKET_PARAM_TYPE, type);
                     jsonData.put(Constants.WEBSOCKET_PARAM_DATA, dataObject);
-                    jsonData.put(Constants.WEBSOCKET_PARAM_DST, AppUser.get().getShelterID().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getShelterID());
+                    jsonData.put(Constants.WEBSOCKET_PARAM_DST, AppUser.get().getBCSId().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultShelterId() : AppUser.get().getBCSId());
                     jsonData.put(Constants.WEBSOCKET_PARAM_SRC, clientId);
                     mWSClient.send(jsonData.toString());
                 } catch (JSONException e) {

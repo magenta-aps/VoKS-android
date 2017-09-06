@@ -57,6 +57,12 @@ import com.bcomesafe.app.webrtc.PeerConnectionClient;
 import com.bcomesafe.app.R;
 import com.bcomesafe.app.webrtc.UnhandledExceptionHandler;
 import com.bcomesafe.app.webrtc.WebSocketRTCClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,16 +81,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
-import android.opengl.EGLContext;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -101,6 +110,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -109,10 +119,11 @@ import java.util.List;
 public class MainActivity extends Activity implements AppRTCClient.SignalingEvents,
         PeerConnectionClient.PeerConnectionEvents, View.OnClickListener,
         RecyclerViewAdapter.RecyclerViewAdapterClient, TextView.OnEditorActionListener,
-        WifiBroadcastReceiver.WifiStateReceiverListener {
+        WifiBroadcastReceiver.WifiStateReceiverListener,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     // WebSocket connection reconnect interval in ms
@@ -222,6 +233,13 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
     // Client id
     private String mClientId;
 
+    // Location
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
+    private Location mPrevLocation = null;
+    private Location mPendingLocation = null;
+
     // Broadcast receiver for battery level change
     private final BroadcastReceiver mBatteryBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -263,6 +281,19 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
             unregisterReceiver(mVolumeBroadcastReceiver);
             Utils.muteSounds(context, true);
             registerReceiver(mVolumeBroadcastReceiver, new IntentFilter("android.media.VOLUME_CHANGED_ACTION"));
+        }
+    };
+
+    /**
+     * Broadcast receiver for GPS provider changes
+     */
+    private final BroadcastReceiver mGPSBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            log("onReceive() mGPSBroadcastReceiver");
+            if (intent.getAction().equals(LocationManager.PROVIDERS_CHANGED_ACTION)) {
+                checkGPSStatus();
+            }
         }
     };
 
@@ -324,7 +355,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         setOnClickListeners();
         initializeAnimations();
         setUpChat();
-        if (DefaultParameters.ENVIRONMENT_ID==Constants.ENVIRONMENT_DEV) {
+        if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
             setMacTextView();
         }
 
@@ -376,6 +407,9 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         // Register volume changed broadcast receiver
         registerReceiver(mVolumeBroadcastReceiver, new IntentFilter("android.media.VOLUME_CHANGED_ACTION"));
 
+        // Register GPS provider changes
+        registerReceiver(mGPSBroadcastReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+
         // Register battery level broadcast receiver
         registerReceiver(mBatteryBroadcastReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
@@ -394,6 +428,13 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                 onProximitySensorChangedState();
             }
         });
+
+        // Location
+        buildGoogleApiClientIfNeeded();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+        startLocationUpdates();
     }
 
     /**
@@ -540,19 +581,17 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         rlCPOCallPolice = (RelativeLayout) findViewById(R.id.rl_initial_overlay_call_police);
 
         //MAC address textview
-        tvMac = (TextView)findViewById(R.id.tv_mac);
+        tvMac = (TextView) findViewById(R.id.tv_mac);
     }
 
     //Set Mac Address in TextView
 
-    private void setMacTextView()
-    {
+    private void setMacTextView() {
         if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
             tvMac.setText("MAC: " + AppUser.get().getDeviceMacAddress());
             tvMac.setVisibility(View.GONE);
         }
     }
-
 
 
     /**
@@ -695,10 +734,9 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         mAdapter = new RecyclerViewAdapter(mData, this);
         rv.setAdapter(mAdapter);
         if (AppUser.get().getDevMode()) {
-            sendSystemMessage(new ChatMessageObject(Constants.INVALID_INT_ID, "Shelter ID=" + AppUser.get().getShelterID(), Constants.MESSAGE_TYPE_APP, System.currentTimeMillis()));
+            sendSystemMessage(new ChatMessageObject(Constants.INVALID_INT_ID, "Shelter ID=" + AppUser.get().getBCSId(), Constants.MESSAGE_TYPE_APP, System.currentTimeMillis()));
         }
     }
-
 
 
     /**
@@ -821,6 +859,8 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         if (rlOverlay.getVisibility() == View.VISIBLE) {
             toggleFullscreen(true);
         }
+        // Check GPS status message
+        checkGPSStatusMessage();
     }
 
     @Override
@@ -843,6 +883,8 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         }
         // Unregister volume change broadcast receiver
         unregisterReceiver(mVolumeBroadcastReceiver);
+        // Unregister GPS provider changes broadcast receiver
+        unregisterReceiver(mGPSBroadcastReceiver);
         // Unregister battery level change broadcast receiver
         unregisterReceiver(mBatteryBroadcastReceiver);
         // Unregister wifi state broadcast receiver
@@ -867,6 +909,8 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         AppContext.get().getRequestManager().clearRequestStore();
         // Finalize remote logs
         RemoteLogUtils.getInstance().finalizeAndCleanUp();
+        // Location
+        stopLocationUpdates();
     }
 
     @SuppressWarnings("EmptyMethod")
@@ -953,6 +997,8 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                 sendSystemMessage(new ChatMessageObject(Constants.INVALID_INT_ID, getString(R.string.connected_to_shelter), Constants.MESSAGE_TYPE_APP, System.currentTimeMillis()));
                 // Update UI according to shelter status
                 onShelterStatus();
+                // Check GPS status
+                checkGPSStatus();
             }
         });
         // Check chat messages queue
@@ -1066,6 +1112,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                     if (canCreatePeerConnection("onShelterStatusGot() 1")) {
                         createPeerConnection();
                     }
+                    checkPendingLocation();
                     break;
                 case Constants.SHELTER_STATUS_OFF:
                     mShelterStatus = shelterStatus;
@@ -1899,7 +1946,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
      */
     private void callPolice() {
         Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:" + DefaultParameters.POLICE_NUMBER));
+        callIntent.setData(Uri.parse("tel:" + AppUser.get().getPoliceNumber()));
         startActivity(callIntent);
     }
 
@@ -1937,6 +1984,16 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
             mAdapter.notifyItemChanged(position);
         } catch (Exception e) {
             // Nothing to do
+        }
+    }
+
+    @Override
+    public void onGPSOffItemClick(int position) {
+        log("onGPSOffItemClick() pos=" + position);
+        try {
+            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        } catch (Exception ignored) {
+
         }
     }
 
@@ -2178,5 +2235,231 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         }
         log("canCreatePeerConnection() canCreate=" + canCreate);
         return canCreate;
+    }
+
+    // Location part
+
+    /**
+     * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
+     * LocationServices API.
+     */
+    private synchronized void buildGoogleApiClientIfNeeded() {
+        log("buildGoogleApiClient()");
+        if (mGoogleApiClient == null) {
+            if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
+                mGoogleApiClient = new GoogleApiClient.Builder(this)
+                        .addConnectionCallbacks(this)
+                        .addOnConnectionFailedListener(this)
+                        .addApi(LocationServices.API)
+                        .build();
+                createLocationRequest();
+            } else {
+                mGoogleApiClient = null;
+                log("buildGoogleApiClient() unable to connect to google play services");
+            }
+        }
+    }
+
+    /**
+     * Sets up the location request. Android has two location request settings:
+     * {@code ACCESS_COARSE_LOCATION} and {@code ACCESS_FINE_LOCATION}. These settings control
+     * the accuracy of the current location. This sample uses ACCESS_FINE_LOCATION, as defined in
+     * the AndroidManifest.xml.
+     * <p>
+     * When the ACCESS_FINE_LOCATION setting is specified, combined with a fast update
+     * interval (5 seconds), the Fused Location Provider API returns location updates that are
+     * accurate to within a few feet.
+     * <p>
+     * These settings are appropriate for mapping applications that show real-time location
+     * updates.
+     */
+    private void createLocationRequest() {
+        log("createLocationRequest()");
+        if (mLocationRequest == null) {
+            mLocationRequest = new LocationRequest();
+
+            // Sets the desired interval for active location updates. This interval is
+            // inexact. You may not receive updates at all if no location sources are available, or
+            // you may receive them slower than requested. You may also receive updates faster than
+            // requested if other applications are requesting location at a faster interval.
+            mLocationRequest.setInterval(DefaultParameters.GPS_UPDATE_INTERVAL_IN_MILLISECONDS);
+
+            // Sets the fastest rate for active location updates. This interval is exact, and your
+            // application will never receive updates faster than this value.
+            mLocationRequest.setFastestInterval(DefaultParameters.GPS_UPDATE_INTERVAL_IN_MILLISECONDS_FASTEST);
+
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        }
+    }
+
+    /**
+     * Requests location updates from the FusedLocationApi.
+     */
+    private void startLocationUpdates() {
+        log("startLocationUpdates()");
+        if (AppUser.get().getBCSUseGPS()) {
+            try {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            } catch (Exception e) {
+                log("Error starting location updates:" + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Removes location updates from the FusedLocationApi.
+     */
+    private void stopLocationUpdates() {
+        log("stopLocationUpdates()");
+        try {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        } catch (Exception e) {
+            log("Error stopping location updates:" + e.getMessage());
+        }
+    }
+
+    // Callbacks
+    @Override
+    public void onConnected(Bundle bundle) {
+        log("Connected to GoogleApiClient");
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        log("onConnectionSuspended()");
+        buildGoogleApiClientIfNeeded();
+        if (mGoogleApiClient != null) {
+            try {
+                mGoogleApiClient.connect();
+            } catch (Exception e) {
+                log("Error connecting google api client:" + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        log("onConnectionFailed()");
+        buildGoogleApiClientIfNeeded();
+        if (mGoogleApiClient != null) {
+            try {
+                mGoogleApiClient.connect();
+            } catch (Exception e) {
+                log("Error connecting google api client:" + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location currentLocation) {
+        log("onLocationChanged() location=" + (currentLocation != null ? currentLocation.toString() : "null"));
+        if (AppUser.get().getBCSUseGPS()) {
+            if (currentLocation != null && (mPrevLocation == null ||
+                    (currentLocation.getLatitude() != mPrevLocation.getLatitude() &&
+                            currentLocation.getLongitude() != mPrevLocation.getLongitude()))) {
+                sendLocation(currentLocation);
+            }
+        } else {
+            log("onLocationChanged() functionality is disabled by shelter");
+        }
+    }
+
+    /**
+     * Sends location
+     *
+     * @param currentLocation Location
+     */
+    private void sendLocation(Location currentLocation) {
+        log("sendLocation() currentLocation=" + (currentLocation != null ? currentLocation.toString() : "null"));
+        if (AppUser.get().getBCSUseGPS()) {
+            if (currentLocation != null) {
+                if (mShelterStatus == Constants.SHELTER_STATUS_ON &&
+                        mAppRtcClient != null && mAppRtcClient.getConnectionState() == WebSocketRTCClient.ConnectionState.CONNECTED) {
+                    if (mPendingLocation != null) {
+                        mPendingLocation = null;
+                    }
+                    mPrevLocation = currentLocation;
+                    // Send message over WebSocket connection
+                    JSONObject locationJson;
+                    try {
+                        locationJson = new JSONObject();
+                        locationJson.put("LAT", currentLocation.getLatitude());
+                        locationJson.put("LON", currentLocation.getLongitude());
+                    } catch (JSONException jsonE) {
+                        log("failed to send location");
+                        locationJson = null;
+                    }
+
+                    if (locationJson != null) {
+                        mAppRtcClient.sendData(Constants.WEBSOCKET_TYPE_LOCATION, locationJson.toString(), mClientId);
+                    }
+                } else {
+                    log("Not sending location, no connection, setting pending");
+                    mPendingLocation = currentLocation;
+                }
+            }
+        } else {
+            log("onLocationChanged() functionality is disabled by shelter");
+        }
+    }
+
+    private void checkPendingLocation() {
+        log("checkPendingLocation()");
+        if (mPrevLocation != null) {
+            sendLocation(mPrevLocation);
+        }
+    }
+
+    private void checkGPSStatus() {
+        log("checkGPSStatus()");
+        if (AppUser.get().getBCSUseGPS()) {
+            // Remove any GPS status message before
+            if (mData != null && mData.size() > 0) {
+                Iterator<ChatMessageObject> iter = mData.iterator();
+
+                while (iter.hasNext()) {
+                    ChatMessageObject messageObject = iter.next();
+                    if (messageObject.getMessageType() == Constants.MESSAGE_TYPE_GPS_OFF) {
+                        iter.remove();
+                        mAdapter.notifyDataSetChanged();
+                    }
+                }
+            }
+
+            if (!isGPSOn()) {
+                // Show new GPS status message
+                sendSystemMessage(new ChatMessageObject(
+                        Constants.INVALID_INT_ID,
+                        getString(R.string.gps_is_off),
+                        Constants.MESSAGE_TYPE_GPS_OFF,
+                        System.currentTimeMillis()));
+            }
+        } else {
+            log("checkGPSStatus() funcionality is disabled by shelter");
+        }
+    }
+
+    private boolean isGPSOn() {
+        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (manager != null && !manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            return false;
+        }
+        return true;
+    }
+
+    private void checkGPSStatusMessage() {
+        log("checkGPSStatusMessage()");
+        if (mData != null && mData.size() > 0 && isGPSOn()) {
+            Iterator<ChatMessageObject> iter = mData.iterator();
+
+            while (iter.hasNext()) {
+                ChatMessageObject messageObject = iter.next();
+                if (messageObject.getMessageType() == Constants.MESSAGE_TYPE_GPS_OFF) {
+                    iter.remove();
+                    mAdapter.notifyDataSetChanged();
+                }
+            }
+        }
     }
 }

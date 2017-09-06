@@ -7,7 +7,9 @@
 
 package com.bcomesafe.app.utils;
 
+import android.content.Intent;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -16,6 +18,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 import com.bcomesafe.app.AppContext;
+import com.bcomesafe.app.AppUser;
 import com.bcomesafe.app.DefaultParameters;
 import com.bcomesafe.app.objects.RemoteLogObject;
 import com.bcomesafe.app.requests.SendLogsRequest;
@@ -25,8 +28,10 @@ import com.bcomesafe.app.requests.SendLogsRequest;
  */
 public class RemoteLogUtils {
 
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = RemoteLogUtils.class.getSimpleName();
+    public static final String ACTION_LOG = "action_log";
+    public static final String EXTRA_LOG = "extra_log";
 
     private static final int LOGS_SIZE_TO_SEND = 100;
 
@@ -65,12 +70,14 @@ public class RemoteLogUtils {
     }
 
     public void put(String tag, String msg, long timestamp) {
+        RemoteLogObject rlo = new RemoteLogObject(tag, msg, timestamp);
         if (DefaultParameters.SHOULD_USE_SSL) {
             if (!mUsing && mLogs != null) {
-                mLogs.add(new RemoteLogObject(tag, msg, timestamp));
+                mLogs.add(rlo);
                 checkSize();
             }
         }
+        LocalBroadcastManager.getInstance(AppContext.get()).sendBroadcast(new Intent(ACTION_LOG).putExtra(EXTRA_LOG, rlo.toString()));
     }
 
     private void checkSize() {
@@ -110,7 +117,10 @@ public class RemoteLogUtils {
                 log("Unable to put log object");
             }
         }
-        AppContext.get().getRequestManager().makeRequest(new SendLogsRequest(logsJSONArray.toString()));
+
+        if (DefaultParameters.REMOTE_LOGS_ENABLED || AppUser.get().getDevMode()) {
+            AppContext.get().getRequestManager().makeRequest(new SendLogsRequest(logsJSONArray.toString()));
+        }
     }
 
     private void log(String msg) {

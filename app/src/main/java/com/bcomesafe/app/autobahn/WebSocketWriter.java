@@ -57,7 +57,7 @@ import java.util.Random;
 @SuppressWarnings("unused")
 public class WebSocketWriter extends Thread {
 
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WebSocketWriter.class.getCanonicalName();
 
     private static final int WEB_SOCKETS_VERSION = 13;

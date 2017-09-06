@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.bcomesafe.app.objects.GCMMessageObject;
+import com.bcomesafe.app.utils.VolumeBroadcastReceiver;
 
 /**
  * User information storage on shared preferences
@@ -131,20 +132,20 @@ public class AppUser {
 
 
     /**
-     * Sets if is device registered on shelter
+     * Sets if is device registered on BCS
      */
     @SuppressWarnings("SameParameterValue")
-    public void setIsRegisteredOnShelter(boolean val) {
-        mUserStore.edit().putBoolean("device_registered_on_shelter", val).commit();
+    public void setIsRegisteredOnBCS(boolean val) {
+        mUserStore.edit().putBoolean("device_registered_on_bcs", val).commit();
     }
 
     /**
-     * Gets if device is registered on shelter
+     * Gets if device is registered on BCS
      *
      * @return boolean
      */
-    public boolean getIsRegisteredOnShelter() {
-        return mUserStore.getBoolean("device_registered_on_shelter", false);
+    public boolean getIsRegisteredOnBCS() {
+        return mUserStore.getBoolean("device_registered_on_bcs", false);
     }
 
     // GCM messages queue
@@ -329,24 +330,42 @@ public class AppUser {
         return mUserStore.getInt("user_vibrate_type_notification", 0);
     }
 
-    // Shelter parameters
+    // BCS parameters
 
     /**
-     * Sets shelter id
+     * Sets BCS id
      *
-     * @param shelterId - string
+     * @param BCSId - string
      */
-    public void setShelterID(String shelterId) {
-        mUserStore.edit().putString("shelter_id", shelterId).commit();
+    public void setBCSId(String BCSId) {
+        mUserStore.edit().putString("bcs_id", BCSId).commit();
     }
 
     /**
-     * Gets shelter id
+     * Gets BCS id
      *
-     * @return shelterId
+     * @return BCSId
      */
-    public String getShelterID() {
-        return mUserStore.getString("shelter_id", Constants.INVALID_STRING_ID);
+    public String getBCSId() {
+        return mUserStore.getString("bcs_id", Constants.INVALID_STRING_ID);
+    }
+
+    /**
+     * Sets BCS name
+     *
+     * @param BCSName - string
+     */
+    public void setBCSName(String BCSName) {
+        mUserStore.edit().putString("bcs_name", BCSName).commit();
+    }
+
+    /**
+     * Gets BCS name
+     *
+     * @return BCSName
+     */
+    public String getBCSName() {
+        return mUserStore.getString("bcs_name", Constants.INVALID_STRING_ID);
     }
 
     /**
@@ -386,6 +405,24 @@ public class AppUser {
     }
 
     /**
+     * Sets BCS use gps
+     *
+     * @param val - boolean
+     */
+    public void setBCSUseGPS(Boolean val) {
+        mUserStore.edit().putBoolean("bcs_use_gps", val != null ? val : false).commit();
+    }
+
+    /**
+     * Gets BCS use gps
+     *
+     * @return val - boolean
+     */
+    public boolean getBCSUseGPS() {
+        return mUserStore.getBoolean("bcs_use_gps", false);
+    }
+
+    /**
      * Sets dev mode
      *
      * @param val - boolean
@@ -401,5 +438,117 @@ public class AppUser {
      */
     public boolean getDevMode() {
         return mUserStore.getBoolean("dev_mode", false);
+    }
+
+    // User parameters
+
+    /**
+     * Sets user name
+     *
+     * @param userName - string
+     */
+    public void setUserName(String userName) {
+        mUserStore.edit().putString("user_name", userName).commit();
+    }
+
+    /**
+     * Gets user name
+     *
+     * @return userName
+     */
+    public String getUserName() {
+        return mUserStore.getString("user_name", Constants.INVALID_STRING_ID);
+    }
+
+    /**
+     * Sets user email
+     *
+     * @param userEmail - string
+     */
+    public void setUserEmail(String userEmail) {
+        mUserStore.edit().putString("user_email", userEmail).commit();
+    }
+
+    /**
+     * Gets user email
+     *
+     * @return userEmail
+     */
+    public String getUserEmail() {
+        return mUserStore.getString("user_email", Constants.INVALID_STRING_ID);
+    }
+
+    /**
+     * Adds alarm cmd
+     *
+     * @param cmd - string
+     */
+    public void addAlarmCmd(String cmd) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - mUserStore.getLong("alarm_cmd_last", 0L) > VolumeBroadcastReceiver.TRESHOLD_BETWEEN_PRESSES) {
+            mUserStore.edit().putString("alarm_cmd", cmd).commit();
+        } else {
+            mUserStore.edit().putString("alarm_cmd", getAlarmCmd() + cmd).commit();
+        }
+        mUserStore.edit().putLong("alarm_cmd_last", currentTime).commit();
+    }
+
+    /**
+     * Gets alarm cmd
+     *
+     * @return cmd
+     */
+    public String getAlarmCmd() {
+        return mUserStore.getString("alarm_cmd", "");
+    }
+
+    /**
+     * Clears alarm cmd
+     */
+    public void clearAlarmCmd() {
+        mUserStore.edit().remove("alarm_cmd").commit();
+    }
+
+    /**
+     * Gets police number
+     *
+     * @return policeNumber String
+     */
+    public String getPoliceNumber() {
+        String policeNumber = mUserStore.getString("police_number", "");
+        if (policeNumber.trim().length() == 0) {
+            policeNumber = DefaultParameters.POLICE_NUMBER;
+        }
+        return policeNumber;
+    }
+
+    /**
+     * Sets police number
+     *
+     * @param policeNumber String
+     */
+    public void setPoliceNumber(String policeNumber) {
+        mUserStore.edit().putString("police_number", policeNumber != null ? policeNumber : "").commit();
+    }
+
+    /**
+     * Sets BCS debug
+     *
+     * @param debug - boolean
+     */
+    public void setBCSDebug(Boolean debug) {
+        if (debug == null) {
+            debug = false;
+        }
+        mUserStore.edit().putBoolean("bcs_debug", debug).commit();
+    }
+
+    /**
+     * Gets BCS debug
+     *
+     * @return BCSDebug
+     */
+    public boolean getBCSDebug() {
+        return mUserStore.getBoolean("bcs_debug", false);
     }
 }

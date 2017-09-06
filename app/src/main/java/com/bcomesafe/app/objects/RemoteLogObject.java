@@ -47,4 +47,13 @@ public class RemoteLogObject {
     private void setTimestamp(long timestamp) {
         this.mTimestamp = timestamp;
     }
+
+    @Override
+    public String toString() {
+        return "RemoteLogObject{" +
+                "mTag='" + mTag + '\'' +
+                ", mMessage='" + mMessage + '\'' +
+                ", mTimestamp=" + mTimestamp +
+                '}';
+    }
 }

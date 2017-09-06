@@ -13,8 +13,6 @@ import android.widget.Button;
 
 import com.bcomesafe.app.activities.MainActivity;
 
-import com.bcomesafe.app.R;
-
 @SuppressWarnings("unused")
 public class MainActivityTest extends ActivityUnitTestCase<MainActivity> {
 

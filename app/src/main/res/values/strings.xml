@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Alarm</string>
+    <string name="app_name">BCS</string>
     <!--suppress CheckTagEmptyBody -->
     <string name="none"></string>
 
@@ -17,6 +17,11 @@
     <string name="loading">Loading,\nplease wait</string>
     <string name="button_alarm">ALARM</string>
     <string name="cancel_alarm">TAP HERE TO CANCEL</string>
+    <string name="register">TAP HERE TO REGISTER</string>
+    <string name="hint_name">Enter your name</string>
+    <string name="hint_email">Enter your email</string>
+    <string name="select_shelter">Select shelter:</string>
+    <string name="hint_filter">Type to filter</string>
     <!-- Main activity -->
     <string name="tap_here_to_chat">Can you tell us something about the situation?\nTap here to chat</string>
     <string name="tap_to_hide">TAP HERE TO HIDE</string>
@@ -38,4 +43,14 @@
     <string name="crisis_center_answered">Crisis Center answered</string>
     <string name="crisis_center_resumed">Crisis Center resumed call</string>
     <string name="crisis_center_hold">Crisis Center hold call</string>
+    <string name="open_gps_settings">OPEN SETTINGS</string>
+    <string name="gps_is_off">GPS is off</string>
+
+    <!-- TODO not translated -->
+    <!-- Errors -->
+    <string name="error_no_shelters">Unable to get shelters information, please wait for retry</string>
+    <string name="error_shelter_not_selected">Please, select shelter</string>
+    <string name="error_name_empty">Please, enter your name</string>
+    <string name="error_email_empty">Please, enter your email</string>
+    <string name="error_email_not_valid">Please, check your email</string>
 </resources>

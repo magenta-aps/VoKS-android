@@ -16,7 +16,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class GotItRequest extends Request {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = GotItRequest.class.getSimpleName();
 
     public GotItRequest(int notificationId) {

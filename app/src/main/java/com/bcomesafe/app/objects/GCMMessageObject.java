@@ -22,7 +22,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class GCMMessageObject {
 
     // Debugging
-    private final static boolean D = true;
+    private final static boolean D = false;
     private final static String TAG = GCMMessageObject.class.getSimpleName();
 
     // Variables

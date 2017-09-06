@@ -24,12 +24,14 @@ public final class Constants {
 
     // Extras
     public static final String EXTRA_SKIP_INITIAL_MUTE = "skip_initial_mute";
+    public static final String EXTRA_AUTO_ALARM = "extra_auto_alarm";
 
     // Chat message types
     public static final int MESSAGE_TYPE_OWN = 1;
     public static final int MESSAGE_TYPE_OPERATOR = 2;
     public static final int MESSAGE_TYPE_PUSH = 3;
     public static final int MESSAGE_TYPE_APP = 4;
+    public static final int MESSAGE_TYPE_GPS_OFF = 5;
 
     // Shared preferences names
     public static final String SHARED_PREFERENCES_APP_USER = "as_app_user";
@@ -68,13 +70,23 @@ public final class Constants {
     public static final String REQUEST_PARAM_CALL_POLICE = "call_police";
     public static final String REQUEST_PARAM_NOTIFICATION_ID = "notification_id";
     public static final String REQUEST_PARAM_REMOTE_LOG = "message";
+    public static final String REQUEST_PARAM_BCS_ID = "bcs_id";
+    public static final String REQUEST_PARAM_BCS_NAME = "bcs_name";
+    public static final String REQUEST_PARAM_BCS_URL = "bcs_url";
+    public static final String REQUEST_PARAM_POLICE_NUMBER = "police_number";
+    public static final String REQUEST_PARAM_USER_NAME = "user_name";
+    public static final String REQUEST_PARAM_USER_EMAIL = "user_email";
+    public static final String REQUEST_PARAM_DEBUG = "debug";
     // Response parameters
     public static final String REQUEST_RESPONSE_PARAM_SUCCESS = "success";
     public static final String REQUEST_RESPONSE_PARAM_SHELTER_ID = "shelter_id";
+    public static final String REQUEST_RESPONSE_PARAM_BCS_ID = "bcs_id";
     public static final String REQUEST_RESPONSE_PARAM_WS_URL = "ws_url";
     public static final String REQUEST_RESPONSE_PARAM_API_URL = "api_url";
     public static final String REQUEST_RESPONSE_PARAM_DEV_MODE = "dev_mode";
     public static final String REQUEST_RESPONSE_PARAM_MESSAGE = "message";
+    public static final String REQUEST_RESPONSE_PARAM_RENEW = "renew";
+    public static final String REQUEST_RESPONSE_PARAM_USE_GPS = "use_gps";
 
     // Broadcast actions
     public static final String ACTION_GOT_IT = "lt.balticamadeus.alarmsystem.action.GotIt";
@@ -112,6 +124,7 @@ public final class Constants {
     public static final String WEBSOCKET_TYPE_BATTERY_LEVEL = "BATTERY_LEVEL";
     public static final String WEBSOCKET_TYPE_PING = "PING";
     public static final String WEBSOCKET_TYPE_PONG = "PONG";
+    public static final String WEBSOCKET_TYPE_LOCATION = "LOCATION";
 
     // WebSocket connection data
     // Default

@@ -57,7 +57,7 @@ import java.util.LinkedList;
 public class WebSocketChannelClient {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WebSocketChannelClient.class.getSimpleName();
 
     private static final int CLOSE_TIMEOUT = 1000;

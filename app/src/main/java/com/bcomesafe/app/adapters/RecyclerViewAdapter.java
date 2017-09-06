@@ -26,7 +26,7 @@ import com.bcomesafe.app.utils.FontsUtils;
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = RecyclerViewAdapter.class.getSimpleName();
 
     // Data array
@@ -36,13 +36,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private static RecyclerViewAdapterClient mCaller;
 
     public interface RecyclerViewAdapterClient {
-         void onGotItItemClick(int position);
+        void onGotItItemClick(int position);
+
+        void onGPSOffItemClick(int position);
     }
 
     @Override
     public int getItemViewType(int position) {
         int messageType = mData.get(position).getMessageType();
-        if (messageType == Constants.MESSAGE_TYPE_PUSH) {
+        if (messageType == Constants.MESSAGE_TYPE_GPS_OFF) {
+            return 4; // GPS OFF
+        } else if (messageType == Constants.MESSAGE_TYPE_PUSH) {
             return 3; // GCM
         } else if (messageType == Constants.MESSAGE_TYPE_APP) {
             return 2; // App
@@ -56,6 +60,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public final TextView tvMessage;
         public Button bGotIt;
+        public Button bGPSOff;
         public TextView tvCrisisCenterTitle;
 
         public ViewHolder(View v) {
@@ -86,6 +91,24 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             } catch (Exception e) {
                 // Nothing to do
             }
+            try {
+                bGPSOff = (Button) v.findViewById(R.id.b_row_message_gps_settings);
+                bGPSOff.setTypeface(FontsUtils.getInstance().getTfBold());
+                bGPSOff.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mCaller != null) {
+                            try {
+                                mCaller.onGPSOffItemClick((Integer) v.getTag());
+                            } catch (Exception e) {
+                                // Nothing to do
+                            }
+                        }
+                    }
+                });
+            } catch (Exception ignored) {
+                // Nothing to do
+            }
         }
     }
 
@@ -110,6 +133,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             case 3: // GCM
                 v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_message_push, parent, false);
                 break;
+            case 4: // GPS OFF
+                v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_message_gps_off, parent, false);
+                break;
             default: // System
                 v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_message_system, parent, false);
                 break;
@@ -129,6 +155,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             } else {
                 holder.bGotIt.setVisibility(View.VISIBLE);
             }
+        }
+        if (holder.bGPSOff != null) {
+            holder.bGPSOff.setTag(position);
         }
     }
 

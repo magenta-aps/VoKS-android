@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Alarm</string>
+    <string name="app_name">BCS</string>
     <!--suppress CheckTagEmptyBody -->
     <string name="none"></string>
 
@@ -38,4 +38,16 @@
     <string name="crisis_center_answered">Krisesenteret svarte</string>
     <string name="crisis_center_resumed">Krisesenteret gjenopptok samtalen</string>
     <string name="crisis_center_hold">Krisesenteret satt samtalen på vent</string>
+    <string name="open_gps_settings">ÅPNE INNSTILLINGER</string>
+    <string name="gps_is_off">GPS er av</string>
+    <string name="register">TRYKK HER FOR REGISTRERING</string>
+    <string name="hint_name">Skriv inn ditt navn</string>
+    <string name="hint_email">Skriv inn din epost adresse</string>
+    <string name="select_shelter">Velg krisesenter:</string>
+    <string name="hint_filter">Skriv for å aktivere filter</string>
+    <string name="error_no_shelters">Klarte ikke å hente informasjon fra krisesenter, vennligst vent</string>
+    <string name="error_shelter_not_selected">Vennligst velg krisesenter</string>
+    <string name="error_name_empty">Vennligst oppgi ditt navn</string>
+    <string name="error_email_empty">Vennligst oppgi din epost adresse</string>
+    <string name="error_email_not_valid">Vennligst sjekk din innboks</string>
 </resources>

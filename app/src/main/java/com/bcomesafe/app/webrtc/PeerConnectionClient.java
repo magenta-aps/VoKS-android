@@ -106,7 +106,7 @@ import java.util.TimerTask;
 public class PeerConnectionClient {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = PeerConnectionClient.class.getSimpleName();
 
     private static final boolean useFrontFacingCamera = false;

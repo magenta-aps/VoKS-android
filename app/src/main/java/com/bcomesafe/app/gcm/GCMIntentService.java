@@ -36,7 +36,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class GCMIntentService extends IntentService {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = GCMIntentService.class.getSimpleName();
 
     public GCMIntentService() {

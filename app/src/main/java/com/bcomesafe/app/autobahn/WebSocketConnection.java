@@ -53,7 +53,7 @@ import com.bcomesafe.app.utils.Utils;
 @SuppressWarnings({"unused", "SynchronizeOnNonFinalField"})
 public class WebSocketConnection implements WebSocket {
 
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WebSocketConnection.class.getSimpleName();
 
     private static final String WS_URI_SCHEME = "ws";

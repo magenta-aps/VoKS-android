@@ -14,7 +14,7 @@ import com.bcomesafe.app.Constants;
 public class TriggerAlarmRequest extends Request {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = TriggerAlarmRequest.class.getSimpleName();
 
     public TriggerAlarmRequest(String deviceId, int callPolice) {

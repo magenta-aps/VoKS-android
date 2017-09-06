@@ -22,7 +22,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class GotItService extends IntentService {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = GotItService.class.getSimpleName();
 
     public GotItService() {

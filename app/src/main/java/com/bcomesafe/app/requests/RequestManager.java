@@ -36,7 +36,6 @@ import javax.net.ssl.SSLSocketFactory;
 import com.bcomesafe.app.AppContext;
 import com.bcomesafe.app.Constants;
 import com.bcomesafe.app.DefaultParameters;
-import com.bcomesafe.app.R;
 import com.bcomesafe.app.utils.RemoteLogUtils;
 import com.bcomesafe.app.utils.Utils;
 
@@ -45,7 +44,7 @@ public class RequestManager {
 
     // Debugging
     private static final String TAG = RequestManager.class.getSimpleName();
-    private static final boolean D = true;
+    private static final boolean D = false;
 
     // Next request ID
     private long mNextRequestId = 0L;

@@ -22,8 +22,6 @@ import java.util.concurrent.TimeUnit;
 import com.bcomesafe.app.activities.AlarmActivity;
 import com.bcomesafe.app.widgets.SquareButton;
 
-import com.bcomesafe.app.R;
-
 public class AlarmActivityTest extends ActivityInstrumentationTestCase2<AlarmActivity> {
 
     private static final String TAG = "AlarmActivity";

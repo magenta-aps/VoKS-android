@@ -16,13 +16,15 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
+import com.bcomesafe.app.DefaultParameters;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class WifiBroadcastReceiver extends BroadcastReceiver {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WifiBroadcastReceiver.class.getSimpleName();
 
     // States
@@ -54,7 +56,8 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
         if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
             try {
                 NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-                if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                        || (DefaultParameters.WIFI_REQUIREMENT_DISABLED && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE)) {
                     log("WIFI state=" + networkInfo.getState());
                     if (networkInfo.getState() == NetworkInfo.State.CONNECTED) {
                         log("WIFI connected");

@@ -51,7 +51,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class LooperExecutor extends Thread implements Executor {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = LooperExecutor.class.getSimpleName();
 
     // Object used to signal that looper thread has started and Handler instance

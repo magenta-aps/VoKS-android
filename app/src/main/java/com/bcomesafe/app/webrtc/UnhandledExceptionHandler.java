@@ -58,7 +58,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 public class UnhandledExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = UnhandledExceptionHandler.class.getSimpleName();
 
     private final Activity activity;

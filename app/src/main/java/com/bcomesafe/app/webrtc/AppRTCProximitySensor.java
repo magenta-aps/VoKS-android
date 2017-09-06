@@ -57,7 +57,7 @@ import android.util.Log;
 public class AppRTCProximitySensor implements SensorEventListener {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = AppRTCProximitySensor.class.getSimpleName();
 
     // This class should be created, started and stopped on one thread

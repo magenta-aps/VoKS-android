@@ -56,7 +56,7 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("WeakerAccess")
 public class WebSocketReader extends Thread {
 
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = WebSocketReader.class.getCanonicalName();
 
     private final Handler mWebSocketConnectionHandler;

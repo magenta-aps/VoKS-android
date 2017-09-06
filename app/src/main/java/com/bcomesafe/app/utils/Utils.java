@@ -47,7 +47,7 @@ import com.bcomesafe.app.DefaultParameters;
 public class Utils {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = Utils.class.getSimpleName();
 
     /**
@@ -108,7 +108,7 @@ public class Utils {
                     // Bypass SSL check for developing env
                     if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
                         SSLSocketFactory sslSocketFactory = getBypassedSSLSocketFactory(context);
-                        if(sslSocketFactory != null) {
+                        if (sslSocketFactory != null) {
                             ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
                         }
                     }
@@ -453,6 +453,28 @@ public class Utils {
         log("isCurrentLanguageNorwegian() currentLocale=" + currentLocale);
         log("isCurrentLanguageNorwegian()=" + currentLocale.toLowerCase(Locale.getDefault()).contains("no"));
         return currentLocale.toLowerCase(Locale.getDefault()).contains("no");
+    }
+
+    public static String createCheckUrl(String url) {
+        try {
+            String scheme = "";
+            if (url.contains("http://")) {
+                scheme = "http://";
+            } else if (url.contains("https://")) {
+                scheme = "https://";
+            } else {
+                scheme = "http://";
+            }
+
+            url = url.replace("http://", "").replace("https://", "");
+            String parts[] = url.split("/");
+            url = parts[0];
+            String combinedUrl = scheme + url + DefaultParameters.DEFAULT_CHECK_URL_END;
+            return combinedUrl;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
     private static void log(String msg) {

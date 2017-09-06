@@ -7,12 +7,12 @@
 
 package com.bcomesafe.app.widgets;
 
-import android.annotation.TargetApi;
 import android.content.Context;
+import android.support.v7.widget.AppCompatButton;
 import android.util.AttributeSet;
-import android.widget.Button;
 
-public class SquareButton extends Button {
+public class SquareButton extends AppCompatButton {
+
     public SquareButton(Context context) {
         super(context);
     }
@@ -25,15 +25,9 @@ public class SquareButton extends Button {
         super(context, attrs, defStyleAttr);
     }
 
-    @SuppressWarnings("unused")
-    @TargetApi(21)
-    public SquareButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-    }
-
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(getMeasuredHeight(), getMeasuredHeight());
+        setMeasuredDimension(getMeasuredWidth(), getMeasuredWidth());
     }
 }

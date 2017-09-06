@@ -15,7 +15,7 @@ import com.bcomesafe.app.Constants;
 public class SendLogsRequest extends Request {
 
     // Debugging
-    private static final boolean D = true;
+    private static final boolean D = false;
     private static final String TAG = SendLogsRequest.class.getSimpleName();
 
     public SendLogsRequest(String logJSONObject) {
