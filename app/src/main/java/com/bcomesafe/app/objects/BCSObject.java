@@ -17,6 +17,9 @@ public class BCSObject {
     @SerializedName(Constants.REQUEST_PARAM_POLICE_NUMBER)
     private String mPoliceNumber;
 
+    @SerializedName(Constants.REQUEST_PARAM_PUBLIC)
+    private Integer mBCSPublic;
+
     @SerializedName(Constants.REQUEST_PARAM_DEBUG)
     private Boolean mDebug;
 
@@ -50,6 +53,14 @@ public class BCSObject {
 
     public void setPoliceNumber(String policeNumber) {
         this.mPoliceNumber = policeNumber;
+    }
+
+    public boolean getBCSPublic() {
+        return mBCSPublic == null || mBCSPublic == 1;
+    }
+
+    public void setBCSPublic(Integer bcsPublic) {
+        mBCSPublic = bcsPublic;
     }
 
     public boolean getDebug() {

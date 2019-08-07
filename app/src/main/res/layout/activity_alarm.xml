@@ -1,269 +1,300 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:ignore="UselessParent,SpUsage,RtlHardcoded">
+    android:fitsSystemWindows="true"
+    tools:ignore="UselessParent,SpUsage,RtlHardcoded"
+    tools:openDrawer="start">
 
-    <LinearLayout
+    <!-- Content -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="100">
+        android:layout_height="match_parent">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="58"
-            android:background="@color/gray_2">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="100">
 
             <RelativeLayout
-                android:id="@+id/rl_start_alarm"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone">
+                android:layout_height="0dp"
+                android:layout_weight="58"
+                android:background="@color/gray_2">
 
-                <ImageView
-                    android:id="@+id/iv_settings"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginTop="16dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_va_settings"
-                    android:visibility="gone" />
-
-                <LinearLayout
+                <RelativeLayout
+                    android:id="@+id/rl_start_alarm"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:baselineAligned="false"
-                    android:gravity="center_horizontal"
-                    android:weightSum="100">
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/iv_settings"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginRight="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_va_settings"
+                        android:visibility="gone" />
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_weight="76"
-                        android:gravity="center_vertical"
-                        android:orientation="vertical"
+                        android:baselineAligned="false"
+                        android:gravity="center_horizontal"
                         android:weightSum="100">
 
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="0dp"
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
                             android:layout_weight="76"
-                            tools:ignore="NestedWeights">
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:weightSum="100">
 
-                            <com.bcomesafe.app.widgets.SquareButton
-                                android:id="@+id/sb_start_alarm"
+                            <RelativeLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_centerInParent="true"
-                                android:background="@drawable/button_alarm"
-                                android:enabled="false"
-                                android:gravity="center"
-                                android:includeFontPadding="false"
-                                android:text="@string/button_alarm"
-                                android:textColor="@drawable/text_button_alarm"
-                                android:textSize="@dimen/text_huge" />
-                        </RelativeLayout>
+                                android:layout_height="0dp"
+                                android:layout_weight="76"
+                                tools:ignore="NestedWeights">
+
+                                <com.bcomesafe.app.widgets.SquareButton
+                                    android:id="@+id/sb_start_alarm"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_centerInParent="true"
+                                    android:background="@drawable/button_alarm"
+                                    android:enabled="false"
+                                    android:gravity="center"
+                                    android:includeFontPadding="false"
+                                    android:text="@string/button_alarm"
+                                    android:textColor="@drawable/text_button_alarm"
+                                    android:textSize="@dimen/text_huge" />
+                            </RelativeLayout>
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/rl_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@id/rl_start_alarm"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentLeft="true"
+                    android:background="@color/gray_2">
+
+                    <TextView
+                        android:id="@+id/tv_message"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:gravity="center_horizontal"
+                        android:includeFontPadding="false"
+                        android:text="@string/loading"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/text_big" />
+                </RelativeLayout>
+
+                <ImageView
+                    android:id="@+id/iv_menu"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginTop="16dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_va_menu" />
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/rl_message"
+                android:id="@+id/rl_cancel_alarm"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_below="@id/rl_start_alarm"
-                android:background="@color/gray_2">
+                android:layout_height="0dp"
+                android:layout_weight="42"
+                android:background="@drawable/bg_tap_here">
 
                 <TextView
-                    android:id="@+id/tv_message"
+                    android:id="@+id/tv_cancel_alarm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
-                    android:gravity="center_horizontal"
                     android:includeFontPadding="false"
-                    android:text="@string/loading"
-                    android:textColor="@color/black"
+                    android:text="@string/cancel_alarm"
+                    android:textColor="@drawable/text_tap_here"
                     android:textSize="@dimen/text_big" />
             </RelativeLayout>
-        </RelativeLayout>
+        </LinearLayout>
 
         <RelativeLayout
-            android:id="@+id/rl_cancel_alarm"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="42"
-            android:background="@drawable/bg_tap_here">
-
-            <TextView
-                android:id="@+id/tv_cancel_alarm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:includeFontPadding="false"
-                android:text="@string/cancel_alarm"
-                android:textColor="@drawable/text_tap_here"
-                android:textSize="@dimen/text_big" />
-        </RelativeLayout>
-    </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/rl_settings"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/gray_2"
-        android:clickable="true"
-        android:descendantFocusability="beforeDescendants"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:visibility="gone">
-
-        <RelativeLayout
-            android:id="@+id/rl_settings_register"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="@drawable/bg_tap_here"
-            android:duplicateParentState="false"
-            android:minHeight="48dp">
-
-            <TextView
-                android:id="@+id/tv_settings_register"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:includeFontPadding="false"
-                android:text="@string/register"
-                android:textColor="@drawable/text_tap_here"
-                android:textSize="@dimen/text_big" />
-        </RelativeLayout>
-
-        <EditText
-            android:id="@+id/et_settings_email"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/rl_settings_register"
-            android:layout_marginBottom="8dp"
-            android:background="@color/gray_3"
-            android:hint="@string/hint_email"
-            android:inputType="textEmailAddress"
-            android:minHeight="48dp"
-            android:paddingLeft="@dimen/margin_big"
-            android:paddingRight="@dimen/margin_big"
-            android:textColor="@color/white"
-            android:textColorHint="@color/gray_2"
-            android:textSize="@dimen/text_big" />
-
-        <EditText
-            android:id="@+id/et_settings_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/et_settings_email"
-            android:layout_marginBottom="8dp"
-            android:background="@color/gray_3"
-            android:hint="@string/hint_name"
-            android:inputType="textCapWords"
-            android:minHeight="48dp"
-            android:paddingLeft="@dimen/margin_big"
-            android:paddingRight="@dimen/margin_big"
-            android:textColor="@color/white"
-            android:textColorHint="@color/gray_2"
-            android:textSize="@dimen/text_big" />
-
-        <TextView
-            android:id="@+id/tv_settings_select_bcs"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/select_shelter"
-            android:textColor="@color/gray_7"
-            android:textSize="@dimen/text_normal" />
-
-        <EditText
-            android:id="@+id/et_settings_filter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/tv_settings_select_bcs"
-            android:background="@color/gray_3"
-            android:hint="@string/hint_filter"
-            android:inputType="textCapWords"
-            android:minHeight="48dp"
-            android:paddingLeft="@dimen/margin_big"
-            android:paddingRight="@dimen/margin_big"
-            android:textColor="@color/white"
-            android:textColorHint="@color/gray_2"
-            android:textSize="@dimen/text_big" />
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_settings_bcs"
+            android:id="@+id/rl_settings"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/et_settings_name"
-            android:layout_below="@id/et_settings_filter"
-            android:layout_marginBottom="8dp" />
+            android:background="@color/gray_2"
+            android:clickable="true"
+            android:descendantFocusability="beforeDescendants"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/tv_settings_loading"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@id/et_settings_name"
-            android:layout_below="@id/et_settings_filter"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="@string/loading"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_big"
+            <RelativeLayout
+                android:id="@+id/rl_settings_register"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:background="@drawable/bg_tap_here"
+                android:duplicateParentState="false"
+                android:minHeight="48dp">
+
+                <TextView
+                    android:id="@+id/tv_settings_register"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:includeFontPadding="false"
+                    android:text="@string/register"
+                    android:textColor="@drawable/text_tap_here"
+                    android:textSize="@dimen/text_big" />
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/et_settings_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/rl_settings_register"
+                android:layout_marginBottom="8dp"
+                android:background="@color/gray_3"
+                android:hint="@string/hint_email"
+                android:inputType="textEmailAddress"
+                android:minHeight="48dp"
+                android:paddingLeft="@dimen/margin_big"
+                android:paddingRight="@dimen/margin_big"
+                android:textColor="@color/white"
+                android:textColorHint="@color/gray_2"
+                android:textSize="@dimen/text_big" />
+
+            <EditText
+                android:id="@+id/et_settings_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/et_settings_email"
+                android:layout_marginBottom="8dp"
+                android:background="@color/gray_3"
+                android:hint="@string/hint_name"
+                android:inputType="textCapWords"
+                android:minHeight="48dp"
+                android:paddingLeft="@dimen/margin_big"
+                android:paddingRight="@dimen/margin_big"
+                android:textColor="@color/white"
+                android:textColorHint="@color/gray_2"
+                android:textSize="@dimen/text_big" />
+
+            <TextView
+                android:id="@+id/tv_settings_select_bcs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/select_shelter"
+                android:textColor="@color/gray_7"
+                android:textSize="@dimen/text_normal" />
+
+            <EditText
+                android:id="@+id/et_settings_filter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_settings_select_bcs"
+                android:background="@color/gray_3"
+                android:hint="@string/hint_filter"
+                android:inputType="textCapWords"
+                android:minHeight="48dp"
+                android:paddingLeft="@dimen/margin_big"
+                android:paddingRight="@dimen/margin_big"
+                android:textColor="@color/white"
+                android:textColorHint="@color/gray_2"
+                android:textSize="@dimen/text_big" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_settings_bcs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@id/et_settings_name"
+                android:layout_below="@id/et_settings_filter"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tv_settings_loading"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@id/et_settings_name"
+                android:layout_below="@id/et_settings_filter"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="@string/loading"
+                android:textColor="@color/black"
+                android:textSize="@dimen/text_big"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/iv_logs"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_va_logs"
             android:visibility="gone" />
-    </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/iv_logs"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="16dp"
-        android:contentDescription="@null"
-        android:src="@drawable/ic_va_logs"
-        android:visibility="gone" />
-
-    <RelativeLayout
-        android:id="@+id/rl_logs"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/gray_2"
-        android:clickable="true"
-        android:descendantFocusability="beforeDescendants"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/tv_logs_send"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_alignParentBottom="true"
-            android:background="@drawable/bg_tap_here"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:text="SEND LOGS"
-            android:textColor="@drawable/text_tap_here"
-            android:textSize="@dimen/text_big" />
-
-        <EditText
-            android:id="@+id/et_logs"
+        <RelativeLayout
+            android:id="@+id/rl_logs"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/tv_logs_send"
-            android:scrollbars="horizontal|vertical" />
+            android:background="@color/gray_2"
+            android:clickable="true"
+            android:descendantFocusability="beforeDescendants"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_logs_send"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_alignParentBottom="true"
+                android:background="@drawable/bg_tap_here"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="SEND LOGS"
+                android:textColor="@drawable/text_tap_here"
+                android:textSize="@dimen/text_big" />
+
+            <EditText
+                android:id="@+id/et_logs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@id/tv_logs_send"
+                android:scrollbars="horizontal|vertical" />
+        </RelativeLayout>
     </RelativeLayout>
-</RelativeLayout>
+
+    <!-- Menu -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:itemTextColor="@color/white"
+        app:menu="@menu/activity_alarm_drawer" />
+</androidx.drawerlayout.widget.DrawerLayout>

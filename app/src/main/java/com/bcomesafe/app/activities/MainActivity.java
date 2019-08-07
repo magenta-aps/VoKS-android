@@ -74,13 +74,16 @@ import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
 import org.webrtc.RendererCommon.ScalingType;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -93,10 +96,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -311,7 +317,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                         /*&& !intent.getStringExtra(Constants.GCM_MESSAGE_TITLE).equals(Constants.INVALID_STRING_ID)*/
                         && intent.getIntExtra(Constants.GCM_MESSAGE_ID, Constants.INVALID_INT_ID) != Constants.INVALID_INT_ID
                         && !intent.getStringExtra(Constants.GCM_MESSAGE_CONTENT).equals(Constants.INVALID_STRING_ID)
-                        ) {
+                ) {
                     sendSystemMessage(new ChatMessageObject(
                             intent.getIntExtra(Constants.GCM_MESSAGE_ID, Constants.INVALID_INT_ID),
                             intent.getStringExtra(Constants.GCM_MESSAGE_CONTENT),
@@ -1946,6 +1952,9 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
      */
     private void callPolice() {
         Intent callIntent = new Intent(Intent.ACTION_CALL);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            callIntent = new Intent(Intent.ACTION_DIAL);
+        }
         callIntent.setData(Uri.parse("tel:" + AppUser.get().getPoliceNumber()));
         startActivity(callIntent);
     }
@@ -2222,7 +2231,7 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
                 && mAppRtcClient != null && mAppRtcClient.getConnectionState() == WebSocketRTCClient.ConnectionState.CONNECTED
                 && !mIceConnected && !mPendingPCClose && mShelterPeerConnectionState == 1
                 && mIceConnectionClosed && mSignalingParameters != null && mPCC != null
-                ) {
+        ) {
             while (mCanCreatePeerConnectionChecking) {
                 // Wait
             }
@@ -2299,6 +2308,10 @@ public class MainActivity extends Activity implements AppRTCClient.SignalingEven
         log("startLocationUpdates()");
         if (AppUser.get().getBCSUseGPS()) {
             try {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
                 LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             } catch (Exception e) {
                 log("Error starting location updates:" + e.getMessage());

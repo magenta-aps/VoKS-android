@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BCS</string>
+    <!--suppress CheckTagEmptyBody -->
+    <string name="none"></string>
+
+    <!-- App strings. -->
+    <string name="check_internet_connection">Проверьте, подключены ли Вы к беспроводной сети Aruba</string>
+    <string name="no_camera_and_microphone">Не удалось найти камеру и микрофон. Вы сможете пообщаться с центром управления в чате.</string>
+    <string name="no_camera">Не удалось найти камеру. Вы сможете пообщаться с центром управления в чате.</string>
+    <string name="no_microphone">Не удалось найти микрофон. Вы сможете пообщаться с центром управления в чате.</string>
+    <string name="camera_and_microphone_busy">Ваши камера и микрофон используется другим приложением. Закройте его и вернитесь в данное приложение.</string>
+    <string name="camera_busy">"Ваша камера используется другим приложением. Закройте его и вернитесь в в данное приложение.</string>
+    <string name="microphone_busy">Ваш микрофон используется другим приложением. Закройте его и вернитесь в в данное приложение.</string>
+    <string name="camera_and_microphone_is_now_available">Камера и микрофон доступны для использования</string>
+    <!-- Alarm activity -->
+    <string name="loading">Загрузка,\nподождите</string>
+    <string name="button_alarm">СИГНАЛ ТРЕВОГИ</string>
+    <string name="cancel_alarm">КОСНИТЕСЬ ЗДЕСЬ, ЧТОБЫ ОТМЕНИТЬ</string>
+    <string name="register">КОСНИТЕСЬ ЗДЕСЬ, ЧТОБЫ ЗАРЕГИСТРИРОВАТЬСЯ</string>
+    <string name="hint_name">Введите свое имя</string>
+    <string name="hint_email">Введите адрес своей электронной почты</string>
+    <string name="select_shelter">Выберите центр управления:</string>
+    <string name="hint_filter">Введите для фильтра</string>
+    <!-- Main activity -->
+    <string name="tap_here_to_chat">Можете ли Вы рассказать нам что-нибудь о ситуации?\nКоснитесь здесь, чтобы пообщаться в чате</string>
+    <string name="tap_to_hide">КОСНИТЕСЬ ЗДЕСЬ, ЧТОБЫ СКРЫТЬ</string>
+    <string name="alarm_active">СИГНАЛ ТРЕВОГИ\nРАБОТАЕТ</string>
+    <string name="explanation">Скройте приложение или позвоните в полицию</string>
+    <string name="call_police">Позвонить в полицию</string>
+    <string name="tap_to_chat">Коснитесь, чтобы увидеть чат</string>
+    <string name="got_it">ЯСНО!</string>
+    <string name="chat_input_hint">Введите сообщение</string>
+    <string name="send">Отправить</string>
+    <string name="crisis_center">Центр управления:</string>
+    <string name="hide">Скрыть</string>
+    <string name="connecting_to_shelter">Подключение центру управления </string>
+    <string name="connected_to_shelter">Подключен к  центру управления </string>
+    <string name="audio_connection_lost">Аудио соединение прервано</string>
+    <string name="connection_lost">Соединение прервано. Ожидание&#8230;</string>
+    <string name="calling_crisis_center">Вызов центра управления. Ожидание ответа&#8230;</string>
+    <string name="call_crisis_center_ended">Звонок в центр управлени завершен </string>
+    <string name="crisis_center_answered">Центр управления ответил</string>
+    <string name="crisis_center_resumed"> Центр управления возобновил вызов</string>
+    <string name="crisis_center_hold"> Центр управления удерживает вызов</string>
+    <string name="open_gps_settings">ОТКРЫТЬ НАСТРОЙКИ</string>
+    <string name="gps_is_off">GPS выключен</string>
+    <!-- Errors -->
+    <string name="error_no_shelters">Не удалось получить информацию о центрах управления. Подождите, затем повторите попытку.</string>
+    <string name="error_shelter_not_selected">Выберите центр управления </string>
+    <string name="error_name_empty">Введите свое имя</string>
+    <string name="error_email_empty">Введите адрес своей электронной почты</string>
+    <string name="error_email_not_valid">Проверьте свою электронную почту</string>
+    <string name="tac_not_accepted">Functions are only available upon accepting the Terms and Conditions</string>
+    <string name="tac_decline">DECLINE</string>
+    <string name="tac_accept">ACCEPT</string>
+    <string name="menu_tac">Terms and conditions</string>
+    <string name="menu_phone">Phone number</string>
+    <string name="phone_not_entered">Functions are only available after entering phone number</string>
+    <string name="phone_not_confirmed">Functions are only available after phone number confirmation</string>
+    <string name="phone_explanation">Please enter phone number below if you want to receive SMS messages from BComeSafe</string>
+    <string name="phone_delete">DELETE</string>
+    <string name="phone_skip">SKIP</string>
+    <string name="phone_submit">SUBMIT</string>
+    <string name="phone_hint">Phone</string>
+    <string name="error_phone_empty">Please, enter your phone</string>
+    <string name="phone_confirm_explanation">You will receive a SMS message with generated code. Please enter this code below:</string>
+    <string name="phone_confirm_explanation_2">Your mobile number is only stored in the BComeSafe system and is only used to send you notifications of serious incidents at your school. You can go back here at any time and delete the number. You will not receive notifications via sms, but you will get regular push notifications. in the app. However, their delivery time is somewhat variable, so the safest is to use SMS.</string>
+    <string name="phone_confirm_hint">Code</string>
+    <string name="phone_confirm_cancel">CANCEL</string>
+    <string name="phone_confirm_submit">SUBMIT</string>
+    <string name="phone_confirm_resend">SEND CODE AGAIN</string>
+    <string name="phone_confirm_resend_success">CODE RESENT</string>
+    <string name="error_phone_token_empty">Please, enter phone code</string>
+    <string name="delete_phone_dialog_title">Delete phone</string>
+    <string name="delete_phone_dialog_message">Are you sure you want to delete phone number?</string>
+    <string name="delete_phone_dialog_confirm">CONFIRM</string>
+    <string name="delete_phone_dialog_cancel">CANCEL</string>
+    <string name="splash_settings">SETTINGS</string>
+    <string name="splash_explanation">Application needs following permissions to function normally:\nCALL_PHONE - to start call to police.\nREAD_PHONE_STATE - to get device unique identification.\nCAMERA - to stream video to shelter.\nRECORD_AUDIO - to stream audio to shelter.\nLOCATION - to get your location.</string>
+    <string name="notification_channel_name">BCS notifications</string>
+
+</resources>
+

@@ -10,6 +10,7 @@ package com.bcomesafe.app.activities;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -24,15 +25,21 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -77,6 +84,7 @@ import com.bcomesafe.app.utils.RemoteLogUtils;
 import com.bcomesafe.app.utils.Utils;
 import com.bcomesafe.app.utils.WifiBroadcastReceiver;
 import com.bcomesafe.app.widgets.SquareButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -84,11 +92,20 @@ import com.google.gson.reflect.TypeToken;
  * AlarmActivity - responsible for checking device UID, registration to BCS, GCM registration,
  * alarm starting
  */
-public class AlarmActivity extends Activity implements OnClickListener, WifiBroadcastReceiver.WifiStateReceiverListener, BCSListAdapter.BCSListAdapterClient, TextWatcher {
+public class AlarmActivity extends Activity implements OnClickListener,
+        WifiBroadcastReceiver.WifiStateReceiverListener, BCSListAdapter.BCSListAdapterClient,
+        TextWatcher, NavigationView.OnNavigationItemSelectedListener {
 
     // Debugging
     private static final boolean D = false;
     private static final String TAG = AlarmActivity.class.getSimpleName();
+
+    private static final String NOTIFICATIONS_CHANNEL_ID = "BCS_notifications";
+
+    // Request codes
+    private static final int RC_TAC = 1001;
+    private static final int RC_PHONE = 1002;
+    private static final int RC_PHONE_CONFIRM = 1003;
 
     // View members
     private RelativeLayout rlAlarm;
@@ -98,6 +115,8 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     private TextView tvMessage, tvCancelAlarm;
     private ImageView ivSettings;
     private RelativeLayout rlSettings;
+    private DrawerLayout dlMenu;
+    private ImageView ivMenu;
     // Logs
     private ImageView ivLogs;
     private RelativeLayout rlLogs;
@@ -147,7 +166,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         @Override
         public void onReceive(Context context, Intent intent) {
             log("onReceive()");
-            if (intent.getAction().equals(Constants.REQUEST_COMPLETED_ACTION)) {
+            if (intent != null && intent.getAction() != null && intent.getAction().equals(Constants.REQUEST_COMPLETED_ACTION)) {
                 log("onReceive() request completed action");
                 if (intent.getLongExtra(Constants.REQUEST_ID_EXTRA, Constants.INVALID_LONG_ID) == mRegisterMobRequestId) {
                     handleRegisterMobRequestResult(mRegisterMobRequestId);
@@ -171,11 +190,12 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         }
     };
 
+    @SuppressLint("SetTextI18n")
     private final BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() != null && intent.getAction().equals(RemoteLogUtils.ACTION_LOG)
-                    && intent.getExtras().containsKey(RemoteLogUtils.EXTRA_LOG) && etLogs != null) {
+            if (intent != null && intent.getAction() != null && intent.getAction().equals(RemoteLogUtils.ACTION_LOG)
+                    && intent.getExtras() != null && intent.getExtras().containsKey(RemoteLogUtils.EXTRA_LOG) && etLogs != null) {
                 etLogs.setText(etLogs.getText() + "\n" + intent.getExtras().getString(RemoteLogUtils.EXTRA_LOG));
             }
         }
@@ -188,6 +208,8 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         // Initialize views
         setContentView(R.layout.activity_alarm);
         initializeViews();
+        initializeNav();
+
         LocalBroadcastManager.getInstance(this).registerReceiver(mLocalBroadcastReceiver, new IntentFilter(RemoteLogUtils.ACTION_LOG));
 
         RemoteLogUtils.getInstance().initializeLogging();
@@ -238,6 +260,18 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         registerReceiver(mWifiStateBroadcastReceiver, intentFilter);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_TAC && resultCode == RESULT_OK) {
+            showAlarmViewsIfUserDataOk(true, false, false);
+        } else if (requestCode == RC_PHONE && resultCode == RESULT_OK) {
+            showAlarmViewsIfUserDataOk(false, true, false);
+        } else if (requestCode == RC_PHONE_CONFIRM && resultCode == RESULT_OK) {
+            showAlarmViewsIfUserDataOk(false, false, true);
+        }
+    }
+
     /**
      * Shows loading views with message
      *
@@ -247,6 +281,8 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         log("showLoading()");
         sbStartAlarm.setEnabled(false);
         rlAlarm.setVisibility(View.GONE);
+        ivMenu.setVisibility(View.GONE);
+        dlMenu.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         rlMessage.setVisibility(View.VISIBLE);
         tvMessage.setText(msg);
         rlSettings.setVisibility(View.GONE);
@@ -259,22 +295,102 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         log("showRetryViews()");
         sbStartAlarm.setEnabled(false);
         rlAlarm.setVisibility(View.GONE);
+        ivMenu.setVisibility(View.GONE);
+        dlMenu.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         tvMessage.setText(msg);
         rlMessage.setVisibility(View.VISIBLE);
         rlSettings.setVisibility(View.GONE);
     }
 
     /**
-     * Shows alarm views
+     * Shows retry views for TAC
      */
-    private void showAlarmViews() {
-        log("showAlarmViews()");
-        sbStartAlarm.setEnabled(true);
-        rlAlarm.setVisibility(View.VISIBLE);
-        tvMessage.setText(getString(R.string.none));
+    private void showRetryViewsForTac() {
+        log("showRetryViewsForTac()");
+        sbStartAlarm.setEnabled(false);
+        rlAlarm.setVisibility(View.GONE);
+        updateDrawerAndLockMode();
+        tvMessage.setText(getString(R.string.tac_not_accepted));
+        rlMessage.setVisibility(View.VISIBLE);
         rlSettings.setVisibility(View.GONE);
-        if (mAutoAlarm) {
-            startMainActivity();
+    }
+
+    /**
+     * Shows retry views for phone
+     */
+    private void showRetryViewsForPhone() {
+        log("showRetryViewsForPhone()");
+        sbStartAlarm.setEnabled(false);
+        rlAlarm.setVisibility(View.GONE);
+        updateDrawerAndLockMode();
+        tvMessage.setText(getString(R.string.phone_not_entered));
+        rlMessage.setVisibility(View.VISIBLE);
+        rlSettings.setVisibility(View.GONE);
+    }
+
+    /**
+     * Shows retry views for phone confirmation
+     */
+    private void showRetryViewsForPhoneConfirmation() {
+        log("showRetryViewsForPhoneConfirmation()");
+        sbStartAlarm.setEnabled(false);
+        rlAlarm.setVisibility(View.GONE);
+        updateDrawerAndLockMode();
+        tvMessage.setText(getString(R.string.phone_not_confirmed));
+        rlMessage.setVisibility(View.VISIBLE);
+        rlSettings.setVisibility(View.GONE);
+    }
+
+    private void showAlarmViewsIfUserDataOk() {
+        showAlarmViewsIfUserDataOk(false, false, false);
+    }
+
+    /**
+     * Shows alarm views if user data (TAC and phone) is ok
+     */
+    private void showAlarmViewsIfUserDataOk(boolean fromResultTac, boolean fromResultPhone, boolean fromResultPhoneConfirm) {
+        log("showAlarmViewsIfTacOk() fromResultTac=" + fromResultTac + ", fromResultPhone=" + fromResultPhone + ", fromResultPhoneConfirm=" + fromResultPhoneConfirm);
+        Boolean needTac = AppUser.get().getNeedTac();
+        Boolean needPhone = AppUser.get().getNeedPhone();
+        Boolean phoneConfirmed = AppUser.get().getPhoneConfirmed();
+        String phone = AppUser.get().getPhone();
+        if (needTac != null && needTac) {
+            showRetryViewsForTac();
+            if (!fromResultTac) {
+                startTacActivity();
+            }
+        } else if (needPhone != null && needPhone) {
+            showRetryViewsForPhone();
+            if (!fromResultPhone) {
+                startPhoneActivity();
+            }
+        } else if (phone != null && !phone.isEmpty() && phoneConfirmed != null && !phoneConfirmed) {
+            showRetryViewsForPhoneConfirmation();
+            if (!fromResultPhoneConfirm) {
+                startPhoneConfirmActivity();
+            }
+        } else {
+            sbStartAlarm.setEnabled(true);
+            rlAlarm.setVisibility(View.VISIBLE);
+            updateDrawerAndLockMode();
+            tvMessage.setText(getString(R.string.none));
+            rlSettings.setVisibility(View.GONE);
+            if (mAutoAlarm) {
+                startMainActivity();
+            }
+        }
+    }
+
+    private void updateDrawerAndLockMode() {
+        Boolean needTac = AppUser.get().getNeedTac();
+        Boolean needPhone = AppUser.get().getNeedPhone();
+        String tacText = AppUser.get().getTacText();
+        if (needTac == null || needPhone == null || tacText == null) {
+            dlMenu.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            ivMenu.setVisibility(View.GONE);
+        } else {
+            dlMenu.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+            ivMenu.setVisibility(View.VISIBLE);
         }
     }
 
@@ -292,7 +408,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             rvBCS.setAdapter(null);
             getBCS();
         } else {
-            rvBCS.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+            rvBCS.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
             mBCSListToShow = new ArrayList<>();
             mBCSListAdapter = new BCSListAdapter(mBCSListToShow, this);
             rvBCS.setAdapter(mBCSListAdapter);
@@ -403,32 +519,38 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
      * Initializes views
      */
     private void initializeViews() {
-        rlAlarm = (RelativeLayout) findViewById(R.id.rl_start_alarm);
-        sbStartAlarm = (SquareButton) findViewById(R.id.sb_start_alarm);
-        rlCancelAlarm = (RelativeLayout) findViewById(R.id.rl_cancel_alarm);
-        tvCancelAlarm = (TextView) findViewById(R.id.tv_cancel_alarm);
-        rlMessage = (RelativeLayout) findViewById(R.id.rl_message);
-        tvMessage = (TextView) findViewById(R.id.tv_message);
-        ivSettings = (ImageView) findViewById(R.id.iv_settings);
-        rlSettings = (RelativeLayout) findViewById(R.id.rl_settings);
+        rlAlarm = findViewById(R.id.rl_start_alarm);
+        sbStartAlarm = findViewById(R.id.sb_start_alarm);
+        rlCancelAlarm = findViewById(R.id.rl_cancel_alarm);
+        tvCancelAlarm = findViewById(R.id.tv_cancel_alarm);
+        rlMessage = findViewById(R.id.rl_message);
+        tvMessage = findViewById(R.id.tv_message);
+        ivSettings = findViewById(R.id.iv_settings);
+        rlSettings = findViewById(R.id.rl_settings);
+        dlMenu = findViewById(R.id.drawer_layout);
+        ivMenu = findViewById(R.id.iv_menu);
 
-        tvSelectBCS = (TextView) findViewById(R.id.tv_settings_select_bcs);
-        tvRegister = (TextView) findViewById(R.id.tv_settings_register);
-        tvLoading = (TextView) findViewById(R.id.tv_settings_loading);
-        etFilter = (EditText) findViewById(R.id.et_settings_filter);
+        tvSelectBCS = findViewById(R.id.tv_settings_select_bcs);
+        tvRegister = findViewById(R.id.tv_settings_register);
+        tvLoading = findViewById(R.id.tv_settings_loading);
+        etFilter = findViewById(R.id.et_settings_filter);
         etFilter.addTextChangedListener(this);
-        etName = (EditText) findViewById(R.id.et_settings_name);
-        etEmail = (EditText) findViewById(R.id.et_settings_email);
-        rlRegister = (RelativeLayout) findViewById(R.id.rl_settings_register);
-        rvBCS = (RecyclerView) findViewById(R.id.rv_settings_bcs);
+        etName = findViewById(R.id.et_settings_name);
+        etEmail = findViewById(R.id.et_settings_email);
+        rlRegister = findViewById(R.id.rl_settings_register);
+        rvBCS = findViewById(R.id.rv_settings_bcs);
 
-        //noinspection ConstantConditions
         ivSettings.setVisibility(DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED ? View.VISIBLE : View.GONE);
 
-        ivLogs = (ImageView) findViewById(R.id.iv_logs);
-        rlLogs = (RelativeLayout) findViewById(R.id.rl_logs);
-        etLogs = (EditText) findViewById(R.id.et_logs);
-        tvLogs = (TextView) findViewById(R.id.tv_logs_send);
+        ivLogs = findViewById(R.id.iv_logs);
+        rlLogs = findViewById(R.id.rl_logs);
+        etLogs = findViewById(R.id.et_logs);
+        tvLogs = findViewById(R.id.tv_logs_send);
+    }
+
+    private void initializeNav() {
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
     }
 
     /**
@@ -457,6 +579,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         sbStartAlarm.setOnClickListener(this);
         rlCancelAlarm.setOnClickListener(this);
         ivSettings.setOnClickListener(this);
+        ivMenu.setOnClickListener(this);
 
         rlRegister.setOnClickListener(this);
 
@@ -485,11 +608,36 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             case R.id.tv_logs_send: // Logs send button
                 sendLogs();
                 break;
+            case R.id.iv_menu:
+                if (dlMenu.isDrawerOpen(GravityCompat.START)) {
+                    dlMenu.closeDrawer(GravityCompat.START);
+                } else {
+                    dlMenu.openDrawer(GravityCompat.START);
+                }
+                break;
         }
     }
 
     @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        switch (menuItem.getItemId()) {
+            case R.id.nav_tac:
+                startTacActivity();
+                break;
+            case R.id.nav_phone:
+                startPhoneActivity();
+                break;
+        }
+        dlMenu.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
     public void onBackPressed() {
+        if (dlMenu.isDrawerOpen(GravityCompat.START)) {
+            dlMenu.closeDrawer(GravityCompat.START);
+            return;
+        }
         if (DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED) {
             if (rlSettings.getVisibility() == View.VISIBLE) {
                 String currentlySelectedBCSId = AppUser.get().getBCSId();
@@ -521,6 +669,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             invalidateBCSDebug();
             AppUser.get().setBCSId(mBCSListToShow.get(position).getBCSId());
             AppUser.get().setBCSName(mBCSListToShow.get(position).getBCSName());
+            AppUser.get().setBCSPublic(mBCSListToShow.get(position).getBCSPublic());
             String bcsUrl = mBCSListToShow.get(position).getBCSUrl();
             if (bcsUrl != null && !bcsUrl.toLowerCase(Locale.getDefault()).contains(DefaultParameters.DEFAULT_API_URL_SUFFIX)) {
                 bcsUrl += DefaultParameters.DEFAULT_API_URL_SUFFIX;
@@ -563,7 +712,9 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             View view = this.getCurrentFocus();
             if (view != null) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
             }
 
             AppUser.get().setUserName(enteredName);
@@ -648,6 +799,27 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     }
 
     /**
+     * Starts tac activity
+     */
+    private void startTacActivity() {
+        startActivityForResult(new Intent(this, TacActivity.class), RC_TAC);
+    }
+
+    /**
+     * Starts phone activity
+     */
+    private void startPhoneActivity() {
+        startActivityForResult(new Intent(this, PhoneActivity.class), RC_PHONE);
+    }
+
+    /**
+     * Starts phone confirm activity
+     */
+    private void startPhoneConfirmActivity() {
+        startActivityForResult(new Intent(this, PhoneConfirmActivity.class), RC_PHONE_CONFIRM);
+    }
+
+    /**
      * Starts worker async task
      */
     private void startWorkerAsyncTask() {
@@ -700,6 +872,11 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
      */
     private void registerToBCS() {
         log("registerToBCS()");
+        AppUser.get().setNeedTac(null);
+        AppUser.get().setTacText(null);
+        AppUser.get().setNeedPhone(null);
+        AppUser.get().setPhone(null);
+        AppUser.get().setPhoneConfirmed(null);
         mRegisterMobRequestId = AppContext.get().getRequestManager().makeRequest(
                 new RegisterMobRequest(AppUser.get().getDeviceUID(),
                         AppUser.get().getGCMId(),
@@ -758,7 +935,14 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
     @SuppressLint("HardwareIds")
     private String generateDeviceUID() {
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String deviceUID = telephonyManager.getDeviceId();
+        String deviceUID = null;
+        try {
+            if (telephonyManager != null) {
+                deviceUID = telephonyManager.getDeviceId();
+            }
+        } catch (SecurityException ignored) {
+
+        }
         log("DeviceUID:" + deviceUID);
         if (deviceUID == null) { // If we could not get device UID from telephony manager
             deviceUID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -810,8 +994,10 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
             }
         } else {
             WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo wInfo = wifiManager.getConnectionInfo();
-            currentMacAddress = wInfo.getMacAddress();
+            if (wifiManager != null) {
+                WifiInfo wInfo = wifiManager.getConnectionInfo();
+                currentMacAddress = wInfo.getMacAddress();
+            }
         }
 
         if (currentMacAddress == null || currentMacAddress.equals(Constants.INVALID_STRING_ID)) {
@@ -887,6 +1073,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                             AppUser.get().setBCSDebug(mBCSList.get(0).getDebug());
                             invalidateBCSDebug();
                             AppUser.get().setBCSName(mBCSList.get(0).getBCSName());
+                            AppUser.get().setBCSPublic(mBCSList.get(0).getBCSPublic());
                             String bcsUrl = mBCSList.get(0).getBCSUrl();
                             if (bcsUrl != null && !bcsUrl.toLowerCase(Locale.getDefault()).contains(DefaultParameters.DEFAULT_API_URL_SUFFIX)) {
                                 bcsUrl += DefaultParameters.DEFAULT_API_URL_SUFFIX;
@@ -900,7 +1087,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                             } else {
                                 mBCSRegistrationOK = true;
 
-                                showAlarmViews();
+                                showAlarmViewsIfUserDataOk();
                                 stopWorkerAsyncTaskLauncher();
                             }
                         } else {
@@ -921,6 +1108,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                                     AppUser.get().setBCSDebug(false);
                                     invalidateBCSDebug();
                                     AppUser.get().setBCSName(null);
+                                    AppUser.get().setBCSPublic(null);
                                     AppUser.get().setPoliceNumber(null);
                                     AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                                 }
@@ -929,6 +1117,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                                 AppUser.get().setBCSDebug(false);
                                 invalidateBCSDebug();
                                 AppUser.get().setBCSName(null);
+                                AppUser.get().setBCSPublic(null);
                                 AppUser.get().setPoliceNumber(null);
                                 AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                             }
@@ -941,6 +1130,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                         AppUser.get().setBCSDebug(false);
                         invalidateBCSDebug();
                         AppUser.get().setBCSName(null);
+                        AppUser.get().setBCSPublic(null);
                         AppUser.get().setPoliceNumber(null);
                         AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                     }
@@ -950,6 +1140,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                     AppUser.get().setBCSDebug(false);
                     invalidateBCSDebug();
                     AppUser.get().setBCSName(null);
+                    AppUser.get().setBCSPublic(null);
                     AppUser.get().setPoliceNumber(null);
                     AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                     showRetryViews(getString(R.string.error_no_shelters));
@@ -960,6 +1151,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                 AppUser.get().setBCSDebug(false);
                 invalidateBCSDebug();
                 AppUser.get().setBCSName(null);
+                AppUser.get().setBCSPublic(null);
                 AppUser.get().setPoliceNumber(null);
                 AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                 showRetryViews(getString(R.string.error_no_shelters));
@@ -1029,59 +1221,127 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                     String apiURL = Constants.INVALID_STRING_ID;
                     boolean renew = false;
                     boolean useGps = false;
+                    Boolean needTac = null;
+                    String tacText = null;
+                    String userPhone = null;
+                    Boolean needPhone = null;
+                    Boolean phoneConfirmed = null;
 
                     if (success) {
                         // shelter_id
                         try {
-                            BCSId = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID).trim();
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID)) {
+                                BCSId = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID).trim();
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_SHELTER_ID);
                         }
                         // debug
                         try {
-                            BCSDebug = responseJson.getBoolean(Constants.REQUEST_PARAM_DEBUG);
+                            if (!responseJson.isNull(Constants.REQUEST_PARAM_DEBUG)) {
+                                BCSDebug = responseJson.getBoolean(Constants.REQUEST_PARAM_DEBUG);
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_PARAM_DEBUG);
                         }
                         // ws_url
                         try {
-                            wsURL = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_WS_URL).trim();
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_WS_URL)) {
+                                wsURL = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_WS_URL).trim();
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_WS_URL);
                         }
                         // api_url
                         try {
-                            apiURL = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_API_URL).trim();
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_API_URL)) {
+                                apiURL = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_API_URL).trim();
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_API_URL);
                         }
                         // dev_mode
                         try {
-                            boolean devMode = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_DEV_MODE);
-                            AppUser.get().setDevMode(devMode);
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_DEV_MODE)) {
+                                boolean devMode = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_DEV_MODE);
+                                AppUser.get().setDevMode(devMode);
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_DEV_MODE);
                         }
                         // renew
                         try {
-                            renew = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_RENEW);
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_RENEW)) {
+                                renew = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_RENEW);
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_RENEW);
                         }
                         // use_gps
                         try {
-                            useGps = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_USE_GPS);
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_USE_GPS)) {
+                                useGps = responseJson.getBoolean(Constants.REQUEST_RESPONSE_PARAM_USE_GPS);
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_USE_GPS);
+                        }
+                        // need_tac
+                        try {
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_NEED_TAC)) {
+                                String needTacString = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_NEED_TAC);
+                                needTac = Constants.REQUEST_RESPONSE_VALUE_TRUE.equals(needTacString);
+                            }
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_NEED_TAC);
+                        }
+                        // tac_text
+                        try {
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_TAC_TEXT)) {
+                                tacText = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_TAC_TEXT);
+                            }
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_TAC_TEXT);
+                        }
+                        // user phone
+                        try {
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_USER_PHONE)) {
+                                userPhone = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_USER_PHONE);
+                            }
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_USER_PHONE);
+                        }
+                        // need phone
+                        try {
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_NEED_PHONE)) {
+                                String needPhoneString = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_NEED_PHONE);
+                                needPhone = Constants.REQUEST_RESPONSE_VALUE_TRUE.equals(needPhoneString);
+                            }
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_NEED_PHONE);
+                        }
+                        // phone confirmed
+                        try {
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_PHONE_CONFIRMED)) {
+                                String phoneConfirmedString = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_PHONE_CONFIRMED);
+                                phoneConfirmed = Constants.REQUEST_RESPONSE_VALUE_TRUE.equals(phoneConfirmedString);
+                            }
+                        } catch (JSONException je) {
+                            log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_PHONE_CONFIRMED);
                         }
                         if (renew) {
                             AppUser.get().setBCSId(null);
                             AppUser.get().setBCSDebug(false);
                             invalidateBCSDebug();
                             AppUser.get().setBCSName(null);
+                            AppUser.get().setBCSPublic(null);
                             AppUser.get().setPoliceNumber(null);
                             AppUser.get().setAPIURL(Constants.INVALID_STRING_ID);
                             AppUser.get().setBCSUseGPS(false);
+                            AppUser.get().setNeedTac(null);
+                            AppUser.get().setTacText(null);
+                            AppUser.get().setNeedPhone(null);
+                            AppUser.get().setPhone(null);
+                            AppUser.get().setPhoneConfirmed(null);
                             mBCSRegistrationNeeded = true;
                             mBCSList.clear();
                             mBCSListToShow.clear();
@@ -1095,10 +1355,15 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                                 AppUser.get().setWsURL(wsURL);
                                 AppUser.get().setAPIURL(apiURL);
                                 AppUser.get().setBCSUseGPS(useGps);
+                                AppUser.get().setNeedTac(needTac);
+                                AppUser.get().setTacText(tacText);
+                                AppUser.get().setNeedPhone(needPhone);
+                                AppUser.get().setPhone(userPhone);
+                                AppUser.get().setPhoneConfirmed(phoneConfirmed);
                                 // Ok
                                 AppUser.get().setIsRegisteredOnBCS(true);
                                 mBCSRegistrationOK = true;
-                                showAlarmViews();
+                                showAlarmViewsIfUserDataOk();
                                 stopWorkerAsyncTaskLauncher();
                             } else {
                                 showRetryViews(getString(R.string.check_internet_connection));
@@ -1110,7 +1375,9 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                         // message
                         String message = null;
                         try {
-                            message = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_MESSAGE).trim();
+                            if (!responseJson.isNull(Constants.REQUEST_RESPONSE_PARAM_MESSAGE)) {
+                                message = responseJson.getString(Constants.REQUEST_RESPONSE_PARAM_MESSAGE).trim();
+                            }
                         } catch (JSONException je) {
                             log("Response does not have " + Constants.REQUEST_RESPONSE_PARAM_MESSAGE);
                         }
@@ -1162,9 +1429,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
         @Override
         protected Boolean doInBackground(Void... params) {
             log("WorkerAsyncTask doInBackground()");
-            //noinspection ConstantConditions
             mBCSIsReachable = DefaultParameters.WIFI_REQUIREMENT_DISABLED || Utils.isURLReachable(getApplicationContext(), DefaultParameters.getDefaultCheckURL(), 3);
-            //noinspection ConstantConditions
             log("mBCSIsReachable=" + mBCSIsReachable);
 
             if (mBCSIsReachable) {
@@ -1197,6 +1462,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                 String currentlySelectedBCSId = AppUser.get().getBCSId();
                 String currentlySelectedBCSName = AppUser.get().getBCSName();
                 String currentlySelectedBCSUrl = AppUser.get().getAPIURL();
+                boolean currentlySelectedBCSPublic = AppUser.get().getBCSPublic();
                 if (TextUtils.isEmpty(currentlySelectedBCSId) || TextUtils.isEmpty(currentlySelectedBCSName)
                         || TextUtils.isEmpty(currentlySelectedBCSUrl)) {
                     log("do not have BCS selected");
@@ -1206,11 +1472,16 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                         return true;
                     }
                 } else {
-                    log("already have BCS selected, do not call to get BCS");
+                    if (currentlySelectedBCSPublic) {
+                        log("already have public BCS selected, call to get BCS");
+                        getBCS();
+                        return true;
+                    } else {
+                        log("already have not public BCS selected, do not call to get BCS");
+                    }
                 }
 
                 if (DefaultParameters.BCS_SETTINGS_FUNCTIONALITY_ENABLED) {
-                    //noinspection ConstantConditions,PointlessBooleanExpression
                     if (mBCSRegistrationNeeded || DefaultParameters.BCS_REGISTRATION_REQUIRED_EVERY_TIME) {
                         // Register to BCS
                         if (!isCancelled()) {
@@ -1238,6 +1509,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                                         3)) {
                                     log("BCS id=" + bcsObject.getBCSId() + " is reachable");
                                     AppUser.get().setBCSName(bcsObject.getBCSName());
+                                    AppUser.get().setBCSPublic(bcsObject.getBCSPublic());
                                     AppUser.get().setBCSId(bcsObject.getBCSId());
                                     AppUser.get().setBCSDebug(bcsObject.getDebug());
                                     String bcsUrl = bcsObject.getBCSUrl();
@@ -1291,7 +1563,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                     } else {
                         if (mBCSRegistrationOK) {
                             log("BCS registration is OK, showing alarm views");
-                            showAlarmViews();
+                            showAlarmViewsIfUserDataOk();
                             stopWorkerAsyncTaskLauncher();
 
                             // It's done
@@ -1348,7 +1620,7 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                 intentGotIt.putExtra(Constants.REQUEST_PARAM_NOTIFICATION_ID, notificationId);
                 PendingIntent pendingIntentGotIt = PendingIntent.getService(getBaseContext(), notificationId, intentGotIt, 0);
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, NOTIFICATIONS_CHANNEL_ID)
                         .setPriority(NotificationCompat.PRIORITY_MAX)
                         .setSmallIcon(getNotificationIcon())
                         .setAutoCancel(true)
@@ -1376,7 +1648,15 @@ public class AlarmActivity extends Activity implements OnClickListener, WifiBroa
                 // Auto cancel
                 notification.flags |= Notification.FLAG_AUTO_CANCEL;
                 // Notify
-                mNotificationManager.notify(notificationId, notification);
+                if (mNotificationManager != null) {
+                    // Android O requires a Notification Channel.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        String notificationChannelName = getString(R.string.notification_channel_name);
+                        NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATIONS_CHANNEL_ID, notificationChannelName, NotificationManager.IMPORTANCE_DEFAULT);
+                        mNotificationManager.createNotificationChannel(notificationChannel);
+                    }
+                    mNotificationManager.notify(notificationId, notification);
+                }
             } else {
                 log("gcmMessage id, title or content is empty, ignoring message");
             }

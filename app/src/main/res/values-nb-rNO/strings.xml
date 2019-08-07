@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">BCS</string>
+    <string name="app_name">BComeSafe Alarm</string>
     <!--suppress CheckTagEmptyBody -->
     <string name="none"></string>
 
@@ -50,4 +50,34 @@
     <string name="error_name_empty">Vennligst oppgi ditt navn</string>
     <string name="error_email_empty">Vennligst oppgi din epost adresse</string>
     <string name="error_email_not_valid">Vennligst sjekk din innboks</string>
+    <string name="tac_not_accepted">For at du skal kunne benytte systemet, må du akseptere brukervilkårene</string>
+    <string name="tac_decline">AVVIS</string>
+    <string name="tac_accept">AKSEPTER</string>
+    <string name="menu_tac">Brukervilkår</string>
+    <string name="menu_phone">Mobilnummer</string>
+    <string name="phone_not_entered">Varsling pr sms er kun mulig ved å legge inn ditt mobilnummer</string>
+    <string name="phone_not_confirmed">Varsling pr sms er kun mulig etter at ditt mobilnummer er verifisert</string>
+    <string name="phone_explanation">Ønsker du å motta varsler om alvorlige hendelser pr sms, så legg inn ditt mobilnummer her:</string>
+    <string name="phone_delete">SLETT</string>
+    <string name="phone_skip">HOPP OVER</string>
+    <string name="phone_submit">SEND</string>
+    <string name="phone_hint">Mobilnummeret</string>
+    <string name="error_phone_empty">Vennligst legg inn ditt mobilnummer</string>
+    <string name="phone_confirm_explanation">Du vil motta en tekstmelding med en kode. Vennligst skriv koden inn her:</string>
+    <string name="phone_confirm_explanation_2">Mobilnummeret ditt blir kun lagret i BComeSafe-systemet og blir kun brukt for å sende deg varsler om alvorlige hendelser ved din skole. Du kan når som helst gå tilbake hit og slette nummeret. Du vil da ikke motta varsler pr. sms, men du vil få vanlige push-notifikasjoner. i appen. Leveringstiden på disse er imidlertid noe variabel, slik at det tryggeste er å benytte sms.</string>
+    <string name="phone_confirm_hint">Kode</string>
+    <string name="phone_confirm_cancel">AVBRYT</string>
+    <string name="phone_confirm_submit">SEND</string>
+    <string name="phone_confirm_resend">SEND NY KODE</string>
+    <string name="phone_confirm_resend_success">Koden er sendt deg på nytt</string>
+    <string name="error_phone_token_empty">Vennligst legg inn den mottatte koden</string>
+    <string name="delete_phone_dialog_title">Slett mobilnummeret</string>
+    <string name="delete_phone_dialog_message">Er du sikker på at du vil slette mobilnummeret?</string>
+    <string name="delete_phone_dialog_confirm">BEKREFT</string>
+    <string name="delete_phone_dialog_cancel">AVBRYT</string>
+    <string name="splash_settings">INNSTILLINGER</string>
+    <!--WRITE_EXTERNAL_STORAGE - for å lagre data.\n-->
+    <string name="splash_explanation">Applikasjonen trenger følgende tillatelser for å fungere:\nCALL_PHONE - for å ringe til politet.\nREAD_PHONE_STATE - for å identifisere din enhet på en byggtegning (posisjon).\nCAMERA - for å sende video til skolens kriseledelse.\nRECORD_AUDIO - for å sende lyd til skolens kriseledelse.\nLOCATION - for å finne din omtrentlige posisjon.</string>
+    <string name="notification_channel_name">BCS notifikasjoner</string>
+
 </resources>

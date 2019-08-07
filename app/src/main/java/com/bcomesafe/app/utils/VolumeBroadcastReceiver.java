@@ -17,6 +17,7 @@ import android.util.Log;
 import com.bcomesafe.app.AppUser;
 import com.bcomesafe.app.Constants;
 import com.bcomesafe.app.activities.AlarmActivity;
+import com.bcomesafe.app.activities.SplashActivity;
 
 public class VolumeBroadcastReceiver extends BroadcastReceiver {
 
@@ -56,10 +57,10 @@ public class VolumeBroadcastReceiver extends BroadcastReceiver {
                     log("onReceive() alarm cmd received!");
                     AppUser.get().clearAlarmCmd();
 
-                    Intent alarmIntent = new Intent(context.getApplicationContext(), AlarmActivity.class);
-                    alarmIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    alarmIntent.putExtra(Constants.EXTRA_AUTO_ALARM, true);
-                    context.startActivity(alarmIntent);
+                    Intent splashIntent = new Intent(context.getApplicationContext(), SplashActivity.class);
+                    splashIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    splashIntent.putExtra(Constants.EXTRA_AUTO_ALARM, true);
+                    context.startActivity(splashIntent);
                 }
             }
         }

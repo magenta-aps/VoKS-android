@@ -40,7 +40,7 @@ public class AppUser {
      * @param uid - unique device identification number
      */
     public void setDeviceUID(String uid) {
-        mUserStore.edit().putString("device_uid", uid + "_" + Constants.REQUEST_PARAM_ANDROID).commit();
+        mUserStore.edit().putString("device_uid", uid + "_" + Constants.REQUEST_PARAM_ANDROID).apply();
     }
 
     /**
@@ -58,7 +58,7 @@ public class AppUser {
      * @param mac_address - device wifi mac address
      */
     public void setDeviceMacAddress(String mac_address) {
-        mUserStore.edit().putString("device_mac_address", mac_address).commit();
+        mUserStore.edit().putString("device_mac_address", mac_address).apply();
     }
 
     /**
@@ -76,7 +76,7 @@ public class AppUser {
      * @param gcmId - GCM id
      */
     public void setGCMId(String gcmId) {
-        mUserStore.edit().putString("gcm_id", gcmId).commit();
+        mUserStore.edit().putString("gcm_id", gcmId).apply();
     }
 
     /**
@@ -91,18 +91,18 @@ public class AppUser {
     /**
      * Clears users data
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void clearUserData() {
         SharedPreferences.Editor userStore = mUserStore.edit();
         userStore.clear();
-        userStore.commit();
+        userStore.apply();
     }
 
     /**
      * Sets application version which was when GCM was registered
      */
     public void setGCMRegisteredAppVersion(int version) {
-        mUserStore.edit().putInt("gcm_registered_app_version", version).commit();
+        mUserStore.edit().putInt("gcm_registered_app_version", version).apply();
     }
 
     /**
@@ -118,7 +118,7 @@ public class AppUser {
      * Sets OS version which was when GCM was registered
      */
     public void setGCMRegisteredOSVersion(int version) {
-        mUserStore.edit().putInt("gcm_registered_os_version", version).commit();
+        mUserStore.edit().putInt("gcm_registered_os_version", version).apply();
     }
 
     /**
@@ -136,7 +136,7 @@ public class AppUser {
      */
     @SuppressWarnings("SameParameterValue")
     public void setIsRegisteredOnBCS(boolean val) {
-        mUserStore.edit().putBoolean("device_registered_on_bcs", val).commit();
+        mUserStore.edit().putBoolean("device_registered_on_bcs", val).apply();
     }
 
     /**
@@ -152,12 +152,12 @@ public class AppUser {
     public void clearGCMMessagesQueue() {
         int count = getGCMMessagesQueueSize();
         for (int i = 0; i < count; i++) {
-            mUserStore.edit().remove("gcm_messages_queue_id_" + i).commit();
-            mUserStore.edit().remove("gcm_messages_queue_title_" + i).commit();
-            mUserStore.edit().remove("gcm_messages_queue_content_" + i).commit();
-            mUserStore.edit().remove("gcm_messages_queue_timestamp_" + i).commit();
+            mUserStore.edit().remove("gcm_messages_queue_id_" + i).apply();
+            mUserStore.edit().remove("gcm_messages_queue_title_" + i).apply();
+            mUserStore.edit().remove("gcm_messages_queue_content_" + i).apply();
+            mUserStore.edit().remove("gcm_messages_queue_timestamp_" + i).apply();
         }
-        mUserStore.edit().putInt("gcm_messages_queue_size", 0).commit();
+        mUserStore.edit().putInt("gcm_messages_queue_size", 0).apply();
     }
 
     public int getGCMMessagesQueueSize() {
@@ -166,11 +166,11 @@ public class AppUser {
 
     public void addGCMMessageToQueue(int id, String title, String content, long timestamp) {
         int count = getGCMMessagesQueueSize();
-        mUserStore.edit().putInt("gcm_messages_queue_id_" + count, id).commit();
-        mUserStore.edit().putString("gcm_messages_queue_title_" + count, title).commit();
-        mUserStore.edit().putString("gcm_messages_queue_content_" + count, content).commit();
-        mUserStore.edit().putLong("gcm_messages_queue_timestamp_" + count, timestamp).commit();
-        mUserStore.edit().putInt("gcm_messages_queue_size", (count + 1)).commit();
+        mUserStore.edit().putInt("gcm_messages_queue_id_" + count, id).apply();
+        mUserStore.edit().putString("gcm_messages_queue_title_" + count, title).apply();
+        mUserStore.edit().putString("gcm_messages_queue_content_" + count, content).apply();
+        mUserStore.edit().putLong("gcm_messages_queue_timestamp_" + count, timestamp).apply();
+        mUserStore.edit().putInt("gcm_messages_queue_size", (count + 1)).apply();
     }
 
     public GCMMessageObject getGCMMessageFromQueue(int id) {
@@ -190,7 +190,7 @@ public class AppUser {
      * @param mode - user ringer mode
      */
     public void setUserRingerMode(int mode) {
-        mUserStore.edit().putInt("user_ringer_mode", mode).commit();
+        mUserStore.edit().putInt("user_ringer_mode", mode).apply();
     }
 
     /**
@@ -210,7 +210,7 @@ public class AppUser {
      * @param volume - int volume level
      */
     public void setUserStreamAlarmVolume(int volume) {
-        mUserStore.edit().putInt("user_stream_alarm_volume", volume).commit();
+        mUserStore.edit().putInt("user_stream_alarm_volume", volume).apply();
     }
 
     /**
@@ -228,7 +228,7 @@ public class AppUser {
      * @param volume - int volume level
      */
     public void setUserStreamMusicVolume(int volume) {
-        mUserStore.edit().putInt("user_stream_music_volume", volume).commit();
+        mUserStore.edit().putInt("user_stream_music_volume", volume).apply();
     }
 
     /**
@@ -246,7 +246,7 @@ public class AppUser {
      * @param volume - int volume level
      */
     public void setUserStreamNotificationVolume(int volume) {
-        mUserStore.edit().putInt("user_stream_notification_volume", volume).commit();
+        mUserStore.edit().putInt("user_stream_notification_volume", volume).apply();
     }
 
     /**
@@ -264,7 +264,7 @@ public class AppUser {
      * @param volume - int volume level
      */
     public void setUserStreamSystemVolume(int volume) {
-        mUserStore.edit().putInt("user_stream_system_volume", volume).commit();
+        mUserStore.edit().putInt("user_stream_system_volume", volume).apply();
     }
 
     /**
@@ -282,7 +282,7 @@ public class AppUser {
      * @param volume - int volume level
      */
     public void setUserStreamRingVolume(int volume) {
-        mUserStore.edit().putInt("user_stream_ring_volume", volume).commit();
+        mUserStore.edit().putInt("user_stream_ring_volume", volume).apply();
     }
 
     /**
@@ -300,7 +300,7 @@ public class AppUser {
      * @param type - int ringer type
      */
     public void setUserVibrateTypeRinger(int type) {
-        mUserStore.edit().putInt("user_vibrate_type_ringer", type).commit();
+        mUserStore.edit().putInt("user_vibrate_type_ringer", type).apply();
     }
 
     /**
@@ -318,7 +318,7 @@ public class AppUser {
      * @param type - int ringer type
      */
     public void setUserVibrateTypeNotification(int type) {
-        mUserStore.edit().putInt("user_vibrate_type_notification", type).commit();
+        mUserStore.edit().putInt("user_vibrate_type_notification", type).apply();
     }
 
     /**
@@ -338,7 +338,7 @@ public class AppUser {
      * @param BCSId - string
      */
     public void setBCSId(String BCSId) {
-        mUserStore.edit().putString("bcs_id", BCSId).commit();
+        mUserStore.edit().putString("bcs_id", BCSId).apply();
     }
 
     /**
@@ -356,7 +356,7 @@ public class AppUser {
      * @param BCSName - string
      */
     public void setBCSName(String BCSName) {
-        mUserStore.edit().putString("bcs_name", BCSName).commit();
+        mUserStore.edit().putString("bcs_name", BCSName).apply();
     }
 
     /**
@@ -369,12 +369,34 @@ public class AppUser {
     }
 
     /**
+     * Sets BCS public
+     *
+     * @param isPublic - boolean
+     */
+    public void setBCSPublic(Boolean isPublic) {
+        if (isPublic == null) {
+            mUserStore.edit().remove("bcs_public").apply();
+        } else {
+            mUserStore.edit().putBoolean("bcs_public", isPublic).apply();
+        }
+    }
+
+    /**
+     * Gets BCS public
+     *
+     * @return is BCS public
+     */
+    public boolean getBCSPublic() {
+        return mUserStore.getBoolean("bcs_public", true);
+    }
+
+    /**
      * Sets WS URL
      *
      * @param wsURL - string
      */
     public void setWsURL(String wsURL) {
-        mUserStore.edit().putString("ws_url", wsURL).commit();
+        mUserStore.edit().putString("ws_url", wsURL).apply();
     }
 
     /**
@@ -392,7 +414,7 @@ public class AppUser {
      * @param apiURL - string
      */
     public void setAPIURL(String apiURL) {
-        mUserStore.edit().putString("api_url", apiURL).commit();
+        mUserStore.edit().putString("api_url", apiURL).apply();
     }
 
     /**
@@ -410,7 +432,7 @@ public class AppUser {
      * @param val - boolean
      */
     public void setBCSUseGPS(Boolean val) {
-        mUserStore.edit().putBoolean("bcs_use_gps", val != null ? val : false).commit();
+        mUserStore.edit().putBoolean("bcs_use_gps", val != null ? val : false).apply();
     }
 
     /**
@@ -428,7 +450,7 @@ public class AppUser {
      * @param val - boolean
      */
     public void setDevMode(boolean val) {
-        mUserStore.edit().putBoolean("dev_mode", val).commit();
+        mUserStore.edit().putBoolean("dev_mode", val).apply();
     }
 
     /**
@@ -448,7 +470,7 @@ public class AppUser {
      * @param userName - string
      */
     public void setUserName(String userName) {
-        mUserStore.edit().putString("user_name", userName).commit();
+        mUserStore.edit().putString("user_name", userName).apply();
     }
 
     /**
@@ -466,7 +488,7 @@ public class AppUser {
      * @param userEmail - string
      */
     public void setUserEmail(String userEmail) {
-        mUserStore.edit().putString("user_email", userEmail).commit();
+        mUserStore.edit().putString("user_email", userEmail).apply();
     }
 
     /**
@@ -486,11 +508,11 @@ public class AppUser {
     public void addAlarmCmd(String cmd) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - mUserStore.getLong("alarm_cmd_last", 0L) > VolumeBroadcastReceiver.TRESHOLD_BETWEEN_PRESSES) {
-            mUserStore.edit().putString("alarm_cmd", cmd).commit();
+            mUserStore.edit().putString("alarm_cmd", cmd).apply();
         } else {
-            mUserStore.edit().putString("alarm_cmd", getAlarmCmd() + cmd).commit();
+            mUserStore.edit().putString("alarm_cmd", getAlarmCmd() + cmd).apply();
         }
-        mUserStore.edit().putLong("alarm_cmd_last", currentTime).commit();
+        mUserStore.edit().putLong("alarm_cmd_last", currentTime).apply();
     }
 
     /**
@@ -506,7 +528,7 @@ public class AppUser {
      * Clears alarm cmd
      */
     public void clearAlarmCmd() {
-        mUserStore.edit().remove("alarm_cmd").commit();
+        mUserStore.edit().remove("alarm_cmd").apply();
     }
 
     /**
@@ -528,7 +550,7 @@ public class AppUser {
      * @param policeNumber String
      */
     public void setPoliceNumber(String policeNumber) {
-        mUserStore.edit().putString("police_number", policeNumber != null ? policeNumber : "").commit();
+        mUserStore.edit().putString("police_number", policeNumber != null ? policeNumber : "").apply();
     }
 
     /**
@@ -540,7 +562,7 @@ public class AppUser {
         if (debug == null) {
             debug = false;
         }
-        mUserStore.edit().putBoolean("bcs_debug", debug).commit();
+        mUserStore.edit().putBoolean("bcs_debug", debug).apply();
     }
 
     /**
@@ -550,5 +572,124 @@ public class AppUser {
      */
     public boolean getBCSDebug() {
         return mUserStore.getBoolean("bcs_debug", false);
+    }
+
+    /**
+     * Sets need tac
+     *
+     * @param val - boolean
+     */
+    public void setNeedTac(Boolean val) {
+        if (val == null) {
+            mUserStore.edit().remove("need_tac").apply();
+        } else {
+            mUserStore.edit().putBoolean("need_tac", val).apply();
+        }
+    }
+
+    /**
+     * Gets need tac
+     *
+     * @return val - Boolean
+     */
+    public Boolean getNeedTac() {
+        if (mUserStore.contains("need_tac")) {
+            return mUserStore.getBoolean("need_tac", false);
+        }
+        return null;
+    }
+
+    /**
+     * Sets tac text
+     *
+     * @param val - String
+     */
+    public void setTacText(String val) {
+        if (val == null) {
+            mUserStore.edit().remove("tac_text").apply();
+        } else {
+            mUserStore.edit().putString("tac_text", val).apply();
+        }
+    }
+
+    /**
+     * Gets tac text
+     *
+     * @return val - String
+     */
+    public String getTacText() {
+        return mUserStore.getString("tac_text", "");
+    }
+
+    /**
+     * Sets need phone
+     *
+     * @param val - boolean
+     */
+    public void setNeedPhone(Boolean val) {
+        if (val == null) {
+            mUserStore.edit().remove("need_phone").apply();
+        } else {
+            mUserStore.edit().putBoolean("need_phone", val).apply();
+        }
+    }
+
+    /**
+     * Gets need phone
+     *
+     * @return val - Boolean
+     */
+    public Boolean getNeedPhone() {
+        if (mUserStore.contains("need_phone")) {
+            return mUserStore.getBoolean("need_phone", false);
+        }
+        return null;
+    }
+
+    /**
+     * Sets phone
+     *
+     * @param val - String
+     */
+    public void setPhone(String val) {
+        if (val == null) {
+            mUserStore.edit().remove("phone").apply();
+        } else {
+            mUserStore.edit().putString("phone", val).apply();
+        }
+    }
+
+    /**
+     * Gets phone
+     *
+     * @return val - String
+     */
+    public String getPhone() {
+        return mUserStore.getString("phone", "");
+    }
+
+    /**
+     * Sets phone confirmed
+     *
+     * @param val - boolean
+     */
+    public void setPhoneConfirmed(Boolean val) {
+        if (val == null) {
+            mUserStore.edit().remove("phone_confirmed").apply();
+        } else {
+            mUserStore.edit().putBoolean("phone_confirmed", val).apply();
+        }
+    }
+
+    /**
+     * Gets phone confirmed
+     *
+     * @return val - Boolean
+     */
+    public Boolean getPhoneConfirmed() {
+        if (mUserStore.contains("phone_confirmed")) {
+            return mUserStore.getBoolean("phone_confirmed", false);
+        }
+        return null;
     }
 }
