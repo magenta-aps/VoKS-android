@@ -9,14 +9,17 @@ package com.bcomesafe.app;
 
 import com.bcomesafe.app.activities.AlarmActivity;
 import com.bcomesafe.app.activities.MainActivity;
+import com.bcomesafe.app.requests.HttpsTrustManager;
 import com.bcomesafe.app.requests.RequestManager;
 
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.multidex.MultiDex;
-import android.support.multidex.MultiDexApplication;
+
+import androidx.multidex.MultiDex;
+import androidx.multidex.MultiDexApplication;
+
 import android.util.Log;
 
 /**
@@ -44,6 +47,9 @@ public class AppContext extends MultiDexApplication implements Application.Activ
         mMainActivityIsVisible = false;
         mAlarmActivityIsVisible = false;
         registerActivityLifecycleCallbacks(this);
+        if ((D || DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) && DefaultParameters.SHOULD_USE_SSL) {
+            HttpsTrustManager.allowAllSSL();
+        }
     }
 
     @Override

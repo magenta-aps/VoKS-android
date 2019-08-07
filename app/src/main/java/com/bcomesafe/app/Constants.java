@@ -21,6 +21,8 @@ public final class Constants {
     // Languages
     public static final String LANGUAGE_CODE_EN = "en";
     public static final String LANGUAGE_CODE_NO = "no";
+    public static final String LANGUAGE_CODE_UK = "uk";
+    public static final String LANGUAGE_CODE_RU = "ru";
 
     // Extras
     public static final String EXTRA_SKIP_INITIAL_MUTE = "skip_initial_mute";
@@ -74,9 +76,14 @@ public final class Constants {
     public static final String REQUEST_PARAM_BCS_NAME = "bcs_name";
     public static final String REQUEST_PARAM_BCS_URL = "bcs_url";
     public static final String REQUEST_PARAM_POLICE_NUMBER = "police_number";
+    public static final String REQUEST_PARAM_PUBLIC = "public";
     public static final String REQUEST_PARAM_USER_NAME = "user_name";
     public static final String REQUEST_PARAM_USER_EMAIL = "user_email";
     public static final String REQUEST_PARAM_DEBUG = "debug";
+    public static final String REQUEST_PARAM_USER_PHONE = "user_phone";
+    public static final String REQUEST_PARAM_ACCEPTED_TAC = "accepted_tac";
+    public static final String REQUEST_PARAM_SKIP_PHONE = "skip_phone";
+    public static final String REQUEST_PARAM_PHONE_TOKEN = "user_phone_token";
     // Response parameters
     public static final String REQUEST_RESPONSE_PARAM_SUCCESS = "success";
     public static final String REQUEST_RESPONSE_PARAM_SHELTER_ID = "shelter_id";
@@ -87,6 +94,14 @@ public final class Constants {
     public static final String REQUEST_RESPONSE_PARAM_MESSAGE = "message";
     public static final String REQUEST_RESPONSE_PARAM_RENEW = "renew";
     public static final String REQUEST_RESPONSE_PARAM_USE_GPS = "use_gps";
+    public static final String REQUEST_RESPONSE_PARAM_NEED_TAC = "need_tac";
+    public static final String REQUEST_RESPONSE_PARAM_TAC_TEXT = "tac_text";
+    public static final String REQUEST_RESPONSE_PARAM_USER_PHONE = "user_phone";
+    public static final String REQUEST_RESPONSE_PARAM_NEED_PHONE = "need_phone";
+    public static final String REQUEST_RESPONSE_PARAM_PHONE_CONFIRMED = "user_phone_confirm";
+    // Response values
+    public static final String REQUEST_RESPONSE_VALUE_TRUE = "1";
+    public static final String REQUEST_RESPONSE_VALUE_FALSE = "0";
 
     // Broadcast actions
     public static final String ACTION_GOT_IT = "lt.balticamadeus.alarmsystem.action.GotIt";

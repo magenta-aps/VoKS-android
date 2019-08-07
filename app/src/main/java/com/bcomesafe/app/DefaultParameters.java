@@ -58,13 +58,13 @@ public final class DefaultParameters {
     public static final String DEFAULT_API_URL_SUFFIX = "/api/bcs";
     // SSL URLs
     // TODO This has to be changed when going live
-    private static final String SSL_DEFAULT_URL = "LIVE SSL SHELTER URL";
+    private static final String SSL_DEFAULT_URL = "YOU_SHOULD_CHANGE_THIS_TO_YOUR_GOOGLE_PROJECT_ID"; // LIVE SSL SHELTER URL
     private static final String SSL_DEFAULT_WS_URL = "wss://" + SSL_DEFAULT_URL + ":9000/";
     private static final String SSL_DEFAULT_API_URL_PREFIX = "https://" + SSL_DEFAULT_URL;
     private static final String SSL_DEFAULT_CHECK_URL = "https://" + SSL_DEFAULT_URL + "/check_connection/check.txt";
     // Non SSL URLs
     // TODO This has to be changed when going live
-    private static final String DEFAULT_URL = "LIVE SHELTER URL";
+    private static final String DEFAULT_URL = "YOU_SHOULD_CHANGE_THIS_TO_YOUR_GOOGLE_PROJECT_ID"; // LIVE SHELTER URL
     private static final String DEFAULT_WS_URL = "ws://" + DEFAULT_URL + ":9000/";
     private static final String DEFAULT_API_URL_PREFIX = "http://" + DEFAULT_URL;
     private static final String DEFAULT_CHECK_URL = "http://" + DEFAULT_URL + "/check_connection/check.txt";

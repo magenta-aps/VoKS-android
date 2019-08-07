@@ -7,6 +7,7 @@
 
 package com.bcomesafe.app.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -34,7 +35,9 @@ import java.util.Locale;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import com.bcomesafe.app.AppContext;
 import com.bcomesafe.app.AppUser;
@@ -106,7 +109,7 @@ public class Utils {
                 if (DefaultParameters.SHOULD_USE_SSL) {
                     conn = (HttpsURLConnection) url.openConnection();
                     // Bypass SSL check for developing env
-                    if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                    if (D || DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
                         SSLSocketFactory sslSocketFactory = getBypassedSSLSocketFactory(context);
                         if (sslSocketFactory != null) {
                             ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
@@ -118,7 +121,7 @@ public class Utils {
                 }
 
                 conn.setUseCaches(false);
-
+                conn.setReadTimeout(timeoutInSeconds * 1000);
                 conn.setConnectTimeout(timeoutInSeconds * 1000);
                 conn.connect();
                 log("ResponseCode=" + conn.getResponseCode());
@@ -356,50 +359,28 @@ public class Utils {
      * @param context Context
      */
     public static SSLSocketFactory getBypassedSSLSocketFactory(Context context) {
-        if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV && DefaultParameters.SHOULD_USE_SSL) {
+        if ((DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV || D) && DefaultParameters.SHOULD_USE_SSL) {
             if (context == null) {
                 context = AppContext.get().getApplicationContext();
             }
 
-            try {
-                // Load CAs from an InputStream
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                // NOTE ba.crt - DEV, ba2.crt - UAT
-                InputStream caInput = context.getAssets().open("ba.crt");
-
-                //noinspection ConstantConditions
-                if (caInput != null) {
-                    Certificate ca;
-                    //noinspection TryFinallyCanBeTryWithResources
-                    try {
-                        ca = cf.generateCertificate(caInput);
-                        log("ca=" + ((X509Certificate) ca).getSubjectDN());
-                    } finally {
-                        caInput.close();
-                    }
-
-                    // Create a KeyStore containing our trusted CAs
-                    String keyStoreType = KeyStore.getDefaultType();
-                    KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-                    keyStore.load(null, null);
-                    keyStore.setCertificateEntry("ca", ca);
-
-                    // Create a TrustManager that trusts the CAs in our KeyStore
-                    String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
-                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
-                    tmf.init(keyStore);
-
-                    // Create an SSLContext that uses our TrustManager
-                    SSLContext sslContext = SSLContext.getInstance("TLS");
-                    sslContext.init(null, tmf.getTrustManagers(), null);
-
-                    // Tell the URLConnection to use a SocketFactory from our SSLContext
-                    // connection.setSSLSocketFactory(sslContext.getSocketFactory());
-                    return sslContext.getSocketFactory();
-                } else {
-                    log("Unable to verify SSL certificate for debugging env");
+            TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
+                @SuppressLint("TrustAllX509TrustManager")
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                @SuppressLint("TrustAllX509TrustManager")
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }
+            };
+
+            try {
+                SSLContext sc = SSLContext.getInstance("SSL");
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                return sc.getSocketFactory();
             } catch (Exception e) {
                 log("Unable to verify SSL certificate for debugging env");
                 return null;
@@ -417,7 +398,25 @@ public class Utils {
      * @return String
      */
     public static String getCurrentLanguageCode(Context context) {
-        return isCurrentLanguageNorwegian(context) ? Constants.LANGUAGE_CODE_NO : Constants.LANGUAGE_CODE_EN;
+        log("getCurrentLanguageCode()");
+        if (context == null) {
+            return Constants.LANGUAGE_CODE_EN;
+        }
+        String currentLocale = getCurrentLocale(context);
+        if (currentLocale == null) {
+            return Constants.LANGUAGE_CODE_EN;
+        }
+        String currentLocaleLowerCased = currentLocale.toLowerCase(Locale.getDefault());
+        log("getCurrentLanguageCode() currentLocaleLowerCased=" + currentLocaleLowerCased);
+        if (currentLocaleLowerCased.contains("no")) {
+            return Constants.LANGUAGE_CODE_NO;
+        } else if (currentLocaleLowerCased.contains("ru")) {
+            return Constants.LANGUAGE_CODE_RU;
+        } else if (currentLocaleLowerCased.contains("uk")) {
+            return Constants.LANGUAGE_CODE_UK;
+        } else {
+            return Constants.LANGUAGE_CODE_EN;
+        }
     }
 
     /**
@@ -433,26 +432,6 @@ public class Utils {
         }
         log("getCurrentLocale() currentLocale=" + context.getResources().getConfiguration().locale.toString());
         return context.getResources().getConfiguration().locale.toString();
-    }
-
-    /**
-     * Returns if current language is Norwegian
-     *
-     * @param context Context
-     * @return Boolean
-     */
-    private static Boolean isCurrentLanguageNorwegian(Context context) {
-        log("isCurrentLanguageNorwegian()");
-        if (context == null) {
-            return true;
-        }
-        String currentLocale = getCurrentLocale(context);
-        if (currentLocale == null) {
-            return true;
-        }
-        log("isCurrentLanguageNorwegian() currentLocale=" + currentLocale);
-        log("isCurrentLanguageNorwegian()=" + currentLocale.toLowerCase(Locale.getDefault()).contains("no"));
-        return currentLocale.toLowerCase(Locale.getDefault()).contains("no");
     }
 
     public static String createCheckUrl(String url) {

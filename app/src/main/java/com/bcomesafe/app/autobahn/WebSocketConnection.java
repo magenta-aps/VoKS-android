@@ -419,7 +419,7 @@ public class WebSocketConnection implements WebSocket {
 
                 SocketFactory factory;
                 if (this.mWebSocketURI.getScheme().equalsIgnoreCase("wss")) {
-                    if (DefaultParameters.SHOULD_USE_SSL && DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                    if (DefaultParameters.SHOULD_USE_SSL && (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV || D)) {
                         factory = Utils.getBypassedSSLSocketFactory(null);
                     } else {
                         factory = SSLCertificateSocketFactory.getDefault();

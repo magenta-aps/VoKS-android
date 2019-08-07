@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">BCS</string>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="ButtonCase">
+    <string name="app_name">BComeSafe Alarm</string>
     <!--suppress CheckTagEmptyBody -->
     <string name="none"></string>
 
@@ -46,11 +46,40 @@
     <string name="open_gps_settings">OPEN SETTINGS</string>
     <string name="gps_is_off">GPS is off</string>
 
-    <!-- TODO not translated -->
     <!-- Errors -->
     <string name="error_no_shelters">Unable to get shelters information, please wait for retry</string>
     <string name="error_shelter_not_selected">Please, select shelter</string>
     <string name="error_name_empty">Please, enter your name</string>
     <string name="error_email_empty">Please, enter your email</string>
     <string name="error_email_not_valid">Please, check your email</string>
+
+    <string name="tac_not_accepted">Functions are only available upon accepting the Terms and Conditions</string>
+    <string name="tac_decline">DECLINE</string>
+    <string name="tac_accept">ACCEPT</string>
+    <string name="menu_tac">Terms and conditions</string>
+    <string name="menu_phone">Phone number</string>
+    <string name="phone_not_entered">Functions are only available after entering phone number</string>
+    <string name="phone_not_confirmed">Functions are only available after phone number confirmation</string>
+    <string name="phone_explanation">Please enter phone number below if you want to receive SMS messages from BComeSafe</string>
+    <string name="phone_delete">DELETE</string>
+    <string name="phone_skip">SKIP</string>
+    <string name="phone_submit">SUBMIT</string>
+    <string name="phone_hint">Phone</string>
+    <string name="error_phone_empty">Please, enter your phone</string>
+    <string name="phone_confirm_explanation">You will receive a SMS message with generated code. Please enter this code below:</string>
+    <string name="phone_confirm_explanation_2">Your mobile number is only stored in the BComeSafe system and is only used to send you notifications of serious incidents at your school. You can go back here at any time and delete the number. You will not receive notifications via sms, but you will get regular push notifications. in the app. However, their delivery time is somewhat variable, so the safest is to use SMS.</string>
+    <string name="phone_confirm_hint">Code</string>
+    <string name="phone_confirm_cancel">CANCEL</string>
+    <string name="phone_confirm_submit">SUBMIT</string>
+    <string name="phone_confirm_resend">SEND CODE AGAIN</string>
+    <string name="phone_confirm_resend_success">CODE RESENT</string>
+    <string name="error_phone_token_empty">Please, enter phone code</string>
+    <string name="delete_phone_dialog_title">Delete phone</string>
+    <string name="delete_phone_dialog_message">Are you sure you want to delete phone number?</string>
+    <string name="delete_phone_dialog_confirm">CONFIRM</string>
+    <string name="delete_phone_dialog_cancel">CANCEL</string>
+    <string name="splash_settings">SETTINGS</string>
+    <!--WRITE_EXTERNAL_STORAGE - to store data.\n-->
+    <string name="splash_explanation">Application needs following permissions to function normally:\nCALL_PHONE - to start call to police.\nREAD_PHONE_STATE - to get device unique identification.\nCAMERA - to stream video to shelter.\nRECORD_AUDIO - to stream audio to shelter.\nLOCATION - to get your location.</string>
+    <string name="notification_channel_name">BCS notifications</string>
 </resources>

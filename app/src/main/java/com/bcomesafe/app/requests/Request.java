@@ -75,9 +75,10 @@ abstract class Request {
     public String getURL() {
         if (mRequestMethod.equals(REQUEST_METHOD_GET) || (mRequestMethod.equals(REQUEST_METHOD_POST) && mPostParametersType.equals(POST_PARAMETERS_URL))) {
             if (mShouldOverrideBaseURL) {
-                String apiURL = AppUser.get().getAPIURL().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultAPIURL() : AppUser.get().getAPIURL();
+                String storedApiUrl = AppUser.get().getAPIURL();
+                String apiURL = (storedApiUrl == null || storedApiUrl.equals(Constants.INVALID_STRING_ID)) ? DefaultParameters.getDefaultAPIURL() : storedApiUrl;
                 if (mURL.length() > 0 && '/' == mURL.charAt(0) && apiURL.length() > 0 && '/' == apiURL.charAt(apiURL.length() - 1)) {
-                    mURL = mURL.substring(1, mURL.length());
+                    mURL = mURL.substring(1);
                 }
                 return apiURL + mURL + getParametersAsURLParameters();
             } else {
@@ -85,9 +86,10 @@ abstract class Request {
             }
         } else {
             if (mShouldOverrideBaseURL) {
-                String apiURL = AppUser.get().getAPIURL().equals(Constants.INVALID_STRING_ID) ? DefaultParameters.getDefaultAPIURL() : AppUser.get().getAPIURL();
+                String storedApiUrl = AppUser.get().getAPIURL();
+                String apiURL = (storedApiUrl == null || storedApiUrl.equals(Constants.INVALID_STRING_ID)) ? DefaultParameters.getDefaultAPIURL() : storedApiUrl;
                 if (mURL.length() > 0 && '/' == mURL.charAt(0) && apiURL.length() > 0 && '/' == apiURL.charAt(apiURL.length() - 1)) {
-                    mURL = mURL.substring(1, mURL.length());
+                    mURL = mURL.substring(1);
                 }
                 return apiURL + mURL;
             } else {
@@ -305,7 +307,7 @@ abstract class Request {
                 result.append(encodedKey);
                 result.append("=");
                 result.append(encodedValue);
-            } catch (UnsupportedEncodingException uee) {
+            } catch (Exception e) {
                 log("Unable to add parameter " + entry.getKey() + "=" + entry.getValue() + "; result on start=" + result.toString());
                 if (wasFirst) {
                     first = true;

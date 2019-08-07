@@ -13,7 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -61,6 +61,7 @@ public class RequestManager {
         final long requestId = mNextRequestId;
         mNextRequestId++;
 
+        @SuppressLint("StaticFieldLeak")
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -89,7 +90,7 @@ public class RequestManager {
                             conn = (HttpsURLConnection) url.openConnection();
                             // Bypass SSL check for developing env
                             // TODO This should be removed when going to production
-                            if (DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
+                            if (D || DefaultParameters.ENVIRONMENT_ID == Constants.ENVIRONMENT_DEV) {
                                 SSLSocketFactory sslSocketFactory = Utils.getBypassedSSLSocketFactory(AppContext.get());
                                 if (sslSocketFactory != null) {
                                     ((HttpsURLConnection) conn).setSSLSocketFactory(sslSocketFactory);
@@ -154,6 +155,7 @@ public class RequestManager {
                             storeResult(requestId, Constants.INVALID_STRING_ID, Constants.HTTP_STATUS_INTERNAL_APP_ERROR);
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
                         storeResult(requestId, Constants.INVALID_STRING_ID, Constants.HTTP_STATUS_INTERNAL_APP_ERROR);
                         // Send error broadcast
                         Writer writer = new StringWriter();
