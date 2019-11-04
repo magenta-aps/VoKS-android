@@ -446,9 +446,10 @@ public class Utils {
             }
 
             url = url.replace("http://", "").replace("https://", "");
-            String parts[] = url.split("/");
+            String[] parts = url.split("/");
             url = parts[0];
             String combinedUrl = scheme + url + DefaultParameters.DEFAULT_CHECK_URL_END;
+            combinedUrl += "?_=" + System.currentTimeMillis();
             return combinedUrl;
         } catch (Exception e) {
             e.printStackTrace();
